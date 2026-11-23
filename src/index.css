@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  code, kbd, samp, pre, .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  }
+}
+
+.font-handflair {
+  font-family: 'Handflair', 'Caveat', cursive;
+}
+
+.font-display {
+  font-family: 'Archivo Black', 'Outfit', sans-serif;
+}
+
+/* ==================== GLASSMORPHISM SYSTEM (GPU-OPTIMIZED) ==================== */
+.glass-panel-dark {
+  background: rgba(18, 20, 30, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.glass-panel-light {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.glass-card-dark {
+  background: rgba(28, 31, 46, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+}
+
+.glass-card-light {
+  background: rgba(255, 255, 255, 0.74);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+}
+
+/* 3D Camera Perspective Scene */
+.scene-3d {
+  perspective: 1100px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+/* Flash animation */
+@keyframes cameraFlash {
+  0% { opacity: 0.95; }
+  100% { opacity: 0; }
+}
+
+.animate-flash {
+  animation: cameraFlash 0.35s ease-out forwards;
+}
+
+/* Static GPU-safe ambient gradient (replaces continuous animated giant blur orbs that caused lag) */
+.ambient-bg-dark {
+  background:
+    radial-gradient(circle at 12% 10%, rgba(251, 191, 36, 0.14) 0%, transparent 42%),
+    radial-gradient(circle at 88% 36%, rgba(236, 72, 153, 0.15) 0%, transparent 45%),
+    radial-gradient(circle at 42% 90%, rgba(99, 102, 241, 0.14) 0%, transparent 45%);
+}
+
+.ambient-bg-light {
+  background:
+    radial-gradient(circle at 12% 10%, rgba(251, 191, 36, 0.16) 0%, transparent 42%),
+    radial-gradient(circle at 88% 36%, rgba(236, 72, 153, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 42% 90%, rgba(99, 102, 241, 0.12) 0%, transparent 45%);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #EC4899;
+}
