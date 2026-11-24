@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+﻿import React, { useState } from 'react'
 import {
   Camera,
   Upload,
@@ -101,7 +101,7 @@ export const BrowseFrames: React.FC<BrowseFramesProps> = ({
                 }}
                 className={`px-3.5 py-2 rounded-2xl text-xs font-bold flex items-center space-x-1.5 transition-all cursor-pointer ${
                   active
-                    ? 'bg-gradient-to-r from-[#EC4899] to-indigo-500 text-white shadow-lg shadow-pink-500/25'
+                    ? 'bg-[#FFB020] text-[#0F0F14] text-white shadow-lg '
                     : isDark
                     ? 'glass-card-dark text-slate-300 hover:text-white'
                     : 'glass-card-light text-slate-700 hover:text-slate-950'
@@ -115,7 +115,7 @@ export const BrowseFrames: React.FC<BrowseFramesProps> = ({
         </div>
 
         <div className="flex items-center space-x-3">
-          <span className="text-xs font-mono opacity-65">
+          <span className="text-xs font-semibold opacity-65">
             {filteredFrames.length} Template Tersedia
           </span>
           <button
@@ -123,7 +123,7 @@ export const BrowseFrames: React.FC<BrowseFramesProps> = ({
               sound.playClick()
               onOpenUploadFrame()
             }}
-            className="px-4 py-2 rounded-2xl bg-gradient-to-r from-[#EC4899] to-indigo-500 hover:opacity-95 text-white text-xs font-bold flex items-center space-x-1.5 shadow-lg shadow-pink-500/25 cursor-pointer transition-all"
+            className="px-4 py-2 rounded-2xl bg-[#FFB020] text-[#0F0F14] hover:opacity-95 text-white text-xs font-bold flex items-center space-x-1.5 shadow-lg  cursor-pointer transition-all"
           >
             <Upload className="w-3.5 h-3.5" />
             <span>Upload Frame Sendiri</span>
@@ -187,7 +187,7 @@ export const BrowseFrames: React.FC<BrowseFramesProps> = ({
           <div className="w-full md:w-1/2 flex flex-col justify-between py-1">
             <div className="space-y-3">
               <div className="flex items-center flex-wrap gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-[#EC4899]/20 text-[#EC4899] border border-[#EC4899]/30 text-[10px] font-extrabold tracking-wider uppercase">
+                <span className="px-2.5 py-0.5 rounded-full bg-[#FFB020]/20 text-[#FFB020] border border-[#FFB020]/30 text-[10px] font-extrabold tracking-wider uppercase">
                   {selectedFrame.tag}
                 </span>
                 <span
@@ -203,13 +203,13 @@ export const BrowseFrames: React.FC<BrowseFramesProps> = ({
                 {selectedFrame.name}
               </h2>
 
-              <p className="text-xs font-mono opacity-65">
+              <p className="text-xs font-semibold opacity-65">
                 {selectedFrame.dimensionsLabel} • {selectedFrame.slots} photos •{' '}
                 {selectedFrame.usageCount} times
               </p>
 
               <div className="flex items-center space-x-2.5 pt-2">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#EC4899] to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow">
+                <div className="w-8 h-8 rounded-xl bg-[#FFB020] text-[#0F0F14] flex items-center justify-center text-white text-xs font-bold shadow">
                   {selectedFrame.creatorName[0]}
                 </div>
                 <div>
@@ -230,7 +230,7 @@ export const BrowseFrames: React.FC<BrowseFramesProps> = ({
                     sound.playClick()
                     onLockedClick(selectedFrame)
                   }}
-                  className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#EC4899] to-rose-500 text-white font-bold text-xs flex items-center justify-center space-x-2 shadow-lg cursor-pointer transition-all"
+                  className="w-full py-3.5 px-4 rounded-2xl bg-[#FFB020] text-white font-bold text-xs flex items-center justify-center space-x-2 shadow-lg cursor-pointer transition-all"
                 >
                   <Lock className="w-4 h-4" />
                   <span>Login untuk Membuka Frame PRO Ini</span>
@@ -242,7 +242,7 @@ export const BrowseFrames: React.FC<BrowseFramesProps> = ({
                       sound.playClick()
                       onStartCameraSession(selectedFrame)
                     }}
-                    className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#EC4899] via-rose-500 to-indigo-500 hover:opacity-95 text-white font-bold text-xs flex items-center justify-center space-x-2 shadow-lg shadow-pink-500/25 cursor-pointer transition-all"
+                    className="w-full py-3.5 px-4 rounded-2xl bg-[#FFB020] hover:opacity-95 text-white font-bold text-xs flex items-center justify-center space-x-2 shadow-lg  cursor-pointer transition-all"
                   >
                     <Camera className="w-4 h-4" />
                     <span>Start Photo Session</span>
@@ -282,7 +282,7 @@ export const BrowseFrames: React.FC<BrowseFramesProps> = ({
                 }}
                 className={`group rounded-3xl p-3 cursor-pointer transition-all hover:-translate-y-1 flex flex-col justify-between ${
                   isSelected
-                    ? 'ring-2 ring-[#EC4899] glass-panel-dark'
+                    ? 'ring-2 ring-[#FFB020] glass-panel-dark'
                     : isDark
                     ? 'glass-card-dark hover:border-white/25'
                     : 'glass-card-light hover:border-slate-300'
@@ -309,7 +309,7 @@ export const BrowseFrames: React.FC<BrowseFramesProps> = ({
                   <p className="text-[11px] truncate opacity-65">by {frame.creatorName}</p>
                   <div className="flex items-center justify-between mt-2 text-[11px]">
                     <span className="opacity-60">{frame.tag}</span>
-                    <span className="text-emerald-400 font-mono flex items-center gap-1">
+                    <span className="text-emerald-400 font-semibold flex items-center gap-1">
                       <TrendingUp className="w-3 h-3" />
                       {frame.usageCount}
                     </span>
@@ -335,7 +335,7 @@ export const BrowseFrames: React.FC<BrowseFramesProps> = ({
               }}
               className={`group rounded-3xl p-3 cursor-pointer transition-all hover:-translate-y-1 flex flex-col justify-between ${
                 isSelected
-                  ? 'ring-2 ring-[#EC4899] shadow-xl'
+                  ? 'ring-2 ring-[#FFB020] shadow-xl'
                   : isDark
                   ? 'glass-card-dark hover:border-white/25'
                   : 'glass-card-light hover:border-slate-300'
@@ -347,7 +347,7 @@ export const BrowseFrames: React.FC<BrowseFramesProps> = ({
                 }`}
               >
                 {frame.badgeText && (
-                  <span className="absolute top-2.5 left-2.5 z-10 px-2 py-0.5 rounded-full bg-[#EC4899] text-white text-[9px] font-extrabold">
+                  <span className="absolute top-2.5 left-2.5 z-10 px-2 py-0.5 rounded-full bg-[#FFB020] text-[#0F0F14] text-[9px] font-extrabold">
                     {frame.badgeText}
                   </span>
                 )}
@@ -367,7 +367,7 @@ export const BrowseFrames: React.FC<BrowseFramesProps> = ({
                 <p className="text-[11px] truncate opacity-65">by {frame.creatorName}</p>
                 <div className="flex items-center justify-between mt-1.5 text-[10px]">
                   <span className="opacity-60">{frame.layoutLabel}</span>
-                  <span className="text-emerald-400 font-mono flex items-center gap-0.5">
+                  <span className="text-emerald-400 font-semibold flex items-center gap-0.5">
                     <Sparkles className="w-2.5 h-2.5" />
                     {frame.usageCount}
                   </span>

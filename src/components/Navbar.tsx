@@ -39,15 +39,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
             <div>
               <div className="flex items-center space-x-1.5">
-                <span className="font-handflair text-2xl font-bold tracking-tight text-[#181818]">
+                <span className="font-semibold text-2xl font-bold tracking-tight text-[#181818]">
                   urbooth
                 </span>
-                <Heart className="w-3 h-3 text-pink-500 fill-pink-500 animate-pulse" />
-                <span className="font-mono text-[9px] uppercase tracking-widest text-[#737069] px-1.5 py-0.5 border border-[#D8D5CE] bg-[#EFECE6] rounded-sm">
+                <Heart className="w-3 h-3 text-[#FFB020] fill-[#FFB020]" />
+                <span className="font-semibold text-[9px] uppercase tracking-widest text-[#737069] px-1.5 py-0.5 border border-[#D8D5CE] bg-[#EFECE6] rounded-sm">
                   CARTOON & ROCK BAND
                 </span>
               </div>
-              <p className="font-mono text-[10px] text-[#737069] hidden sm:block">
+              <p className="font-semibold text-[10px] text-[#737069] hidden sm:block">
                 CUTE DOODLES & ROCK BAND PHOTO STRIPS
               </p>
             </div>
@@ -61,7 +61,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               sound.playClick()
               onViewChange('studio')
             }}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-wider transition-all rounded-sm ${
+            className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all rounded-sm ${
               currentView === 'studio'
                 ? 'bg-[#181818] text-[#F7F6F2]'
                 : 'text-[#66645E] hover:text-[#181818] hover:bg-[#E5E1D8]'
@@ -76,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               sound.playClick()
               onViewChange('archive')
             }}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-wider transition-all rounded-sm relative ${
+            className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all rounded-sm relative ${
               currentView === 'archive'
                 ? 'bg-[#181818] text-[#F7F6F2]'
                 : 'text-[#66645E] hover:text-[#181818] hover:bg-[#E5E1D8]'
@@ -86,7 +86,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span>Archive</span>
             {photoCount > 0 && (
               <span
-                className={`ml-1 text-[9px] px-1 font-mono rounded-full ${
+                className={`ml-1 text-[9px] px-1 font-semibold rounded-full ${
                   currentView === 'archive' ? 'bg-[#3A3835] text-[#F7F6F2]' : 'bg-[#D8D5CE] text-[#181818]'
                 }`}
               >
@@ -100,7 +100,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center space-x-2 sm:space-x-3">
           {isMember ? (
             <div className="flex items-center space-x-2">
-              <div className="hidden sm:flex items-center space-x-1.5 border border-[#D8D5CE] bg-[#FAF9F6] px-2.5 py-1 text-xs font-mono rounded-md">
+              <div className="hidden sm:flex items-center space-x-1.5 border border-[#D8D5CE] bg-[#FAF9F6] px-2.5 py-1 text-xs font-semibold rounded-md">
                 <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block animate-pulse" />
                 <span className="text-[#181818] font-medium">{user.name || user.email.split('@')[0]}</span>
                 <span className="text-[#8C8983]">•</span>
@@ -115,7 +115,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onLogout()
                 }}
                 title="Logout"
-                className="px-2.5 py-1 border border-[#D8D5CE] bg-[#EFECE6] hover:bg-[#181818] hover:text-[#F7F6F2] hover:border-[#181818] text-xs font-mono uppercase tracking-wider flex items-center space-x-1 transition-all rounded-sm"
+                className="px-2.5 py-1 border border-[#D8D5CE] bg-[#EFECE6] hover:bg-[#181818] hover:text-[#F7F6F2] hover:border-[#181818] text-xs font-semibold uppercase tracking-wider flex items-center space-x-1 transition-all rounded-sm"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span className="hidden md:inline">Logout</span>
@@ -123,7 +123,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           ) : (
             <div className="flex items-center space-x-2">
-              <div className="hidden sm:flex items-center space-x-1.5 border border-[#D8D5CE] bg-[#EFECE6] px-2.5 py-1 text-xs font-mono text-[#737069] rounded-md">
+              <div className="hidden sm:flex items-center space-x-1.5 border border-[#D8D5CE] bg-[#EFECE6] px-2.5 py-1 text-xs font-semibold text-[#737069] rounded-md">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-600 inline-block" />
                 <span>GUEST MODE</span>
                 <span className="text-[#8C8983]">•</span>
@@ -136,7 +136,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   sound.playClick()
                   onOpenAuth()
                 }}
-                className="px-3 py-1.5 bg-[#181818] text-[#F7F6F2] hover:bg-[#383838] text-xs font-mono uppercase tracking-wider flex items-center space-x-1.5 transition-all shadow-none rounded-md"
+                className="px-3 py-1.5 bg-[#181818] text-[#F7F6F2] hover:bg-[#383838] text-xs font-semibold uppercase tracking-wider flex items-center space-x-1.5 transition-all shadow-none rounded-md"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                 <span>Unlock All Frames</span>

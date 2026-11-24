@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+﻿import React, { useState } from 'react'
 import { Lock, Check, Sparkles } from 'lucide-react'
 import type { FrameCategory, FrameTemplate, UserRole } from '../types'
 import { FRAME_TEMPLATES } from '../constants/frames'
@@ -36,11 +36,11 @@ export const FrameSelector: React.FC<FrameSelectorProps> = ({
       {/* Category Tabs */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#D8D5CE] pb-3 mb-4 gap-3">
         <div className="flex items-center space-x-2">
-          <Sparkles className="w-4 h-4 text-pink-600" />
-          <h3 className="font-handflair text-xl font-bold text-[#181818]">
+          <Sparkles className="w-4 h-4 text-[#FFB020]" />
+          <h3 className="font-semibold text-xl font-bold text-[#181818]">
             Choose Frame Style
           </h3>
-          <span className="text-[11px] font-mono text-[#737069]">
+          <span className="text-[11px] font-semibold text-[#737069]">
             ({FRAME_TEMPLATES.length} EDITIONS)
           </span>
         </div>
@@ -63,7 +63,7 @@ export const FrameSelector: React.FC<FrameSelectorProps> = ({
                 sound.playClick()
                 setActiveTab(tab.id as FilterTab)
               }}
-              className={`px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider transition-all rounded-md cursor-pointer ${
+              className={`px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider transition-all rounded-md cursor-pointer ${
                 activeTab === tab.id
                   ? 'bg-[#181818] text-[#F7F6F2] font-semibold'
                   : 'text-[#66645E] hover:text-[#181818] hover:bg-[#E5E1D8]'
@@ -103,14 +103,14 @@ export const FrameSelector: React.FC<FrameSelectorProps> = ({
               <div className="flex items-start justify-between mb-2.5">
                 <div>
                   <div className="flex items-center space-x-1.5 mb-1">
-                    <span className="font-mono text-[9px] px-1.5 py-0.5 border border-[#D8D5CE] bg-[#EFECE6] text-[#181818] rounded-sm">
+                    <span className="font-semibold text-[9px] px-1.5 py-0.5 border border-[#D8D5CE] bg-[#EFECE6] text-[#181818] rounded-sm">
                       {frame.code}
                     </span>
-                    <span className="text-[10px] font-mono text-[#737069]">
+                    <span className="text-[10px] font-semibold text-[#737069]">
                       {frame.themeType === 'cartoon' ? '🐾 CARTOON' : frame.themeType === 'band' ? '🎸 ROCK BAND' : '✨ SIGNATURE'}
                     </span>
                   </div>
-                  <h4 className="font-handflair text-lg text-[#181818] tracking-tight group-hover:text-black">
+                  <h4 className="font-semibold text-lg text-[#181818] tracking-tight group-hover:text-black">
                     {frame.name}
                   </h4>
                 </div>
@@ -118,17 +118,17 @@ export const FrameSelector: React.FC<FrameSelectorProps> = ({
                 {/* Status Badges */}
                 <div>
                   {isLockedForUser ? (
-                    <div className="flex items-center space-x-1 text-[9px] font-mono px-2 py-0.5 bg-[#EFECE6] border border-[#D8D5CE] text-[#8C5228] rounded-full">
+                    <div className="flex items-center space-x-1 text-[9px] font-semibold px-2 py-0.5 bg-[#EFECE6] border border-[#D8D5CE] text-[#8C5228] rounded-full">
                       <Lock className="w-2.5 h-2.5" />
                       <span>LOCKED</span>
                     </div>
                   ) : isSelected ? (
-                    <div className="flex items-center space-x-1 text-[9px] font-mono px-2 py-0.5 bg-[#181818] text-[#F7F6F2] rounded-full">
+                    <div className="flex items-center space-x-1 text-[9px] font-semibold px-2 py-0.5 bg-[#181818] text-[#F7F6F2] rounded-full">
                       <Check className="w-2.5 h-2.5" />
                       <span>ACTIVE</span>
                     </div>
                   ) : (
-                    <div className="text-[9px] font-mono text-[#737069]">
+                    <div className="text-[9px] font-semibold text-[#737069]">
                       {frame.slots} CUTS
                     </div>
                   )}
@@ -145,7 +145,7 @@ export const FrameSelector: React.FC<FrameSelectorProps> = ({
               >
                 {/* Visual Doodles on Preview */}
                 <div className="w-full flex items-center justify-between text-[11px] mb-1 px-1">
-                  <span className="font-handflair font-bold text-xs" style={{ color: frame.textColor }}>
+                  <span className="font-semibold font-bold text-xs" style={{ color: frame.textColor }}>
                     urbooth
                   </span>
                   <span className="text-[10px]">
@@ -161,7 +161,7 @@ export const FrameSelector: React.FC<FrameSelectorProps> = ({
                         className="w-full h-full border border-current opacity-40 flex items-center justify-center rounded-xs"
                         style={{ color: frame.textColor }}
                       >
-                        <span className="font-mono text-[7px] font-bold">0{s}</span>
+                        <span className="font-semibold text-[7px] font-bold">0{s}</span>
                       </div>
                     ))}
                   </div>
@@ -177,21 +177,21 @@ export const FrameSelector: React.FC<FrameSelectorProps> = ({
                         className="w-full flex-1 border border-current opacity-40 flex items-center justify-center rounded-xs"
                         style={{ color: frame.textColor }}
                       >
-                        <span className="font-mono text-[7px] font-bold">0{s + 1}</span>
+                        <span className="font-semibold text-[7px] font-bold">0{s + 1}</span>
                       </div>
                     ))}
                   </div>
                 )}
 
                 <div className="w-full text-center mt-1">
-                  <span className="font-handflair text-[11px] truncate block" style={{ color: frame.textColor }}>
+                  <span className="font-semibold text-[11px] truncate block" style={{ color: frame.textColor }}>
                     {frame.defaultVenue.split('•')[0]}
                   </span>
                 </div>
               </div>
 
               {/* Description & Action footer */}
-              <div className="pt-2 border-t border-[#EFECE6] flex items-center justify-between text-[10px] font-mono text-[#737069]">
+              <div className="pt-2 border-t border-[#EFECE6] flex items-center justify-between text-[10px] font-semibold text-[#737069]">
                 <span className="truncate pr-2">{frame.description}</span>
                 {isLockedForUser ? (
                   <span className="text-[#8C5228] font-bold shrink-0 hover:underline">

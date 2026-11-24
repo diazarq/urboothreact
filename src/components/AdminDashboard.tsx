@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+﻿import React, { useState } from 'react'
 import {
   ShieldCheck,
   Layers,
@@ -130,7 +130,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       customOverlayUrl: newOverlayUrl || undefined,
       bgColor: newBg,
       textColor: '#FFFFFF',
-      accentColor: '#EC4899',
+      accentColor: '#FFB020',
       subtleBorderColor: '#FFFFFF',
       tag: newTag,
       badgeText: 'NEW',
@@ -170,11 +170,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         }`}
       >
         <div className="flex items-center space-x-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-[#EC4899] flex items-center justify-center text-white shadow-lg">
+          <div className="w-12 h-12 rounded-2xl bg-[#FFB020] flex items-center justify-center text-white shadow-lg">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-[10px] font-mono uppercase tracking-widest text-amber-400 font-bold">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-amber-400 font-bold">
               ADMINISTRATOR CONTROL CENTER
             </span>
             <h1 className="text-2xl font-extrabold">Admin Panel URBOOTH</h1>
@@ -201,7 +201,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 }}
                 className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center space-x-2 cursor-pointer transition-all ${
                   active
-                    ? 'bg-[#EC4899] text-white shadow-lg shadow-pink-500/25'
+                    ? 'bg-[#FFB020] text-[#0F0F14] shadow-lg '
                     : isDark
                     ? 'glass-card-dark text-slate-300 hover:text-white'
                     : 'glass-card-light text-slate-700 hover:text-black'
@@ -221,14 +221,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           { label: 'Total Template Frame', value: frames.length, color: 'text-sky-400' },
           { label: 'Frame Aktif (ON)', value: activeCount, color: 'text-emerald-400' },
           { label: 'Frame Expired (Lewat Waktu)', value: expiredCount, color: 'text-amber-400' },
-          { label: 'Total Pengguna Terdaftar', value: managedUsers.length, color: 'text-[#EC4899]' },
+          { label: 'Total Pengguna Terdaftar', value: managedUsers.length, color: 'text-[#FFB020]' },
         ].map((stat) => (
           <div
             key={stat.label}
             className={`p-4 rounded-2xl ${isDark ? 'glass-card-dark' : 'glass-card-light'}`}
           >
             <p className="text-[11px] font-semibold opacity-65">{stat.label}</p>
-            <p className={`text-2xl font-display font-black mt-1 ${stat.color}`}>
+            <p className={`text-2xl font-extrabold font-black mt-1 ${stat.color}`}>
               {stat.value}
             </p>
           </div>
@@ -260,7 +260,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   }}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all ${
                     frameFilter === f.id
-                      ? 'bg-[#EC4899] text-white'
+                      ? 'bg-[#FFB020] text-[#0F0F14]'
                       : isDark
                       ? 'bg-white/5 text-slate-300'
                       : 'bg-slate-100 text-slate-700'
@@ -290,7 +290,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   sound.playClick()
                   setShowAddFrame(!showAddFrame)
                 }}
-                className="px-4 py-2 rounded-xl bg-[#EC4899] hover:bg-[#DB2777] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow"
+                className="px-4 py-2 rounded-xl bg-[#FFB020] hover:bg-[#F28C1B] text-[#0F0F14] text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow"
               >
                 <Plus className="w-4 h-4" />
                 <span>Tambah Frame Baru</span>
@@ -371,7 +371,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     />
                   </label>
 
-                  <label className="px-3 py-2 rounded-xl border border-dashed border-[#EC4899]/60 text-xs font-bold text-[#EC4899] flex items-center gap-1.5 cursor-pointer hover:bg-[#EC4899]/10">
+                  <label className="px-3 py-2 rounded-xl border border-dashed border-[#FFB020]/60 text-xs font-bold text-[#FFB020] flex items-center gap-1.5 cursor-pointer hover:bg-[#FFB020]/10">
                     <Upload className="w-3.5 h-3.5" />
                     <span>{newOverlayUrl ? 'Overlay PNG Siap!' : 'Upload Overlay PNG (Opsional)'}</span>
                     <input type="file" accept="image/png" onChange={handleOverlayUpload} className="hidden" />
@@ -397,7 +397,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               value={frameSearch}
               onChange={(e) => setFrameSearch(e.target.value)}
               placeholder="Cari nama atau kode frame..."
-              className={`w-full pl-10 pr-4 py-2 rounded-xl border text-xs font-medium focus:outline-none focus:border-[#EC4899] ${
+              className={`w-full pl-10 pr-4 py-2 rounded-xl border text-xs font-medium focus:outline-none focus:border-[#FFB020] ${
                 isDark
                   ? 'bg-white/5 border-white/15 text-white'
                   : 'bg-slate-100 border-slate-300 text-slate-900'
@@ -408,7 +408,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           {/* Frame Management Table */}
           <div className="overflow-x-auto max-h-[460px] overflow-y-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-white/10 uppercase text-[10px] font-mono opacity-65">
+              <thead className="border-b border-white/10 uppercase text-[10px] font-semibold opacity-65">
                 <tr>
                   <th className="py-3 px-3">Frame & Kode</th>
                   <th className="py-3 px-3">Layout</th>
@@ -432,17 +432,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           />
                           <div>
                             <div className="font-bold">{f.name}</div>
-                            <div className="text-[10px] font-mono opacity-60">
+                            <div className="text-[10px] font-semibold opacity-60">
                               {f.code} • by {f.creatorName}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 px-3 font-mono text-[11px]">{f.layoutLabel}</td>
+                      <td className="py-3 px-3 font-semibold text-[11px]">{f.layoutLabel}</td>
                       <td className="py-3 px-3">
                         <div className="flex items-center space-x-2">
                           <span
-                            className={`font-mono text-[11px] ${
+                            className={`font-semibold text-[11px] ${
                               expired ? 'text-red-400 font-bold' : 'opacity-75'
                             }`}
                           >
@@ -494,7 +494,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                                 sound.playClick()
                                 onExtendFrameExpiry(f.id)
                               }}
-                              className="px-2 py-1 rounded-lg bg-indigo-500/20 text-indigo-300 text-[10px] font-bold hover:bg-indigo-500/30 cursor-pointer"
+                              className="px-2 py-1 rounded-lg text-[#FFB020] text-[#FFB020] text-[10px] font-bold text-[#FFB020] cursor-pointer"
                             >
                               +30 Hari
                             </button>
@@ -572,7 +572,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </select>
             <button
               type="submit"
-              className="py-2 px-4 rounded-xl bg-[#EC4899] hover:bg-[#DB2777] text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+              className="py-2 px-4 rounded-xl bg-[#FFB020] hover:bg-[#F28C1B] text-[#0F0F14] text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Tambah User</span>
@@ -582,7 +582,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           {/* Users Table */}
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-white/10 uppercase text-[10px] font-mono opacity-65">
+              <thead className="border-b border-white/10 uppercase text-[10px] font-semibold opacity-65">
                 <tr>
                   <th className="py-3 px-3">User</th>
                   <th className="py-3 px-3">Role</th>
@@ -598,7 +598,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <tr key={u.id} className="hover:bg-white/5 transition-colors">
                       <td className="py-3 px-3">
                         <div className="font-bold">{u.name}</div>
-                        <div className="text-[11px] opacity-60 font-mono">{u.email}</div>
+                        <div className="text-[11px] opacity-60 font-semibold">{u.email}</div>
                       </td>
                       <td className="py-3 px-3">
                         <button
@@ -609,7 +609,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase flex items-center gap-1 cursor-pointer ${
                             u.role === 'admin'
                               ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                              : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                              : 'text-[#FFB020] text-[#FFB020] border text-[#FFB020]'
                           }`}
                         >
                           {u.role === 'admin' && <Crown className="w-3 h-3" />}
@@ -627,7 +627,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           {isSuspended ? 'SUSPENDED' : 'AKTIF'}
                         </span>
                       </td>
-                      <td className="py-3 px-3 font-mono text-[11px] opacity-70">
+                      <td className="py-3 px-3 font-semibold text-[11px] opacity-70">
                         {new Date(u.createdAt).toLocaleDateString('id-ID')}
                       </td>
                       <td className="py-3 px-3 text-right">

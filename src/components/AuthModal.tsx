@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+﻿import React, { useState } from 'react'
 import { X, Lock, CheckCircle2, ArrowRight, Mail, KeyRound, Sparkles } from 'lucide-react'
 import type { User } from '../types'
 import { sound } from '../utils/sound'
@@ -127,7 +127,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </button>
 
         <div className="mb-5">
-          <div className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-[#EC4899]/15 text-[#EC4899] text-[10px] font-extrabold tracking-wider uppercase mb-2">
+          <div className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-[#FFB020]/15 text-[#FFB020] text-[10px] font-extrabold tracking-wider uppercase mb-2">
             <Lock className="w-3 h-3" />
             <span>URBOOTH MEMBER ACCESS</span>
           </div>
@@ -150,15 +150,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           }`}
         >
           <div className="flex items-center space-x-2">
-            <CheckCircle2 className="w-4 h-4 text-[#EC4899] shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-[#FFB020] shrink-0" />
             <span>Akses menu "Frame Kita" & buat frame kustom sendiri</span>
           </div>
           <div className="flex items-center space-x-2">
-            <CheckCircle2 className="w-4 h-4 text-[#EC4899] shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-[#FFB020] shrink-0" />
             <span>Unlock seluruh frame Special Event, Cartoon, Band & Arcade</span>
           </div>
           <div className="flex items-center space-x-2">
-            <CheckCircle2 className="w-4 h-4 text-[#EC4899] shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-[#FFB020] shrink-0" />
             <span>Simpan otomatis semua photo strip ke Galeri Akun</span>
           </div>
         </div>
@@ -207,7 +207,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             }}
             className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               tab === 'signin'
-                ? 'bg-[#EC4899] text-white'
+                ? 'bg-[#FFB020] text-[#0F0F14]'
                 : isDark
                 ? 'text-zinc-400 hover:text-white'
                 : 'text-zinc-600 hover:text-black'
@@ -223,7 +223,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             }}
             className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               tab === 'register'
-                ? 'bg-[#EC4899] text-white'
+                ? 'bg-[#FFB020] text-[#0F0F14]'
                 : isDark
                 ? 'text-zinc-400 hover:text-white'
                 : 'text-zinc-600 hover:text-black'
@@ -250,7 +250,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 placeholder="misal: Raka Putra"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-semibold focus:outline-none focus:border-[#EC4899] ${
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-semibold focus:outline-none focus:border-[#FFB020] ${
                   isDark
                     ? 'bg-[#111115] border-zinc-800 text-white'
                     : 'bg-zinc-50 border-zinc-300 text-zinc-900'
@@ -270,7 +270,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               placeholder="kamu@urbooth.id"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-semibold focus:outline-none focus:border-[#EC4899] ${
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-semibold focus:outline-none focus:border-[#FFB020] ${
                 isDark
                   ? 'bg-[#111115] border-zinc-800 text-white'
                   : 'bg-zinc-50 border-zinc-300 text-zinc-900'
@@ -289,7 +289,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-semibold focus:outline-none focus:border-[#EC4899] ${
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-semibold focus:outline-none focus:border-[#FFB020] ${
                 isDark
                   ? 'bg-[#111115] border-zinc-800 text-white'
                   : 'bg-zinc-50 border-zinc-300 text-zinc-900'
@@ -300,7 +300,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-[#EC4899] hover:bg-[#DB2777] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-lg shadow-[#EC4899]/25 mt-2"
+            className="w-full py-3 rounded-xl bg-[#FFB020] hover:bg-[#F28C1B] text-[#0F0F14] font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition-all cursor-pointer shadow-lg  mt-2"
           >
             <span>{tab === 'signin' ? 'Masuk & Buka Semua Fitur' : 'Buat Akun Member'}</span>
             <ArrowRight className="w-4 h-4" />
@@ -311,7 +311,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <button
             type="button"
             onClick={handleQuickDemoMember}
-            className="text-xs font-bold text-[#EC4899] hover:underline flex items-center justify-center gap-1 cursor-pointer"
+            className="text-xs font-bold text-[#FFB020] hover:underline flex items-center justify-center gap-1 cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>1-Klik Demo: Masuk sebagai Member (User Biasa)</span>

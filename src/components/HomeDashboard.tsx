@@ -2,95 +2,72 @@ import React from 'react'
 import {
   ArrowRight,
   Users,
-  Clock,
   Sparkles,
-  Lock,
   Camera,
   Upload,
   Palette,
-  FolderHeart,
-  Aperture,
+  Video,
+  Layers,
+  Heart,
+  QrCode,
 } from 'lucide-react'
-import type { FrameTemplate, User } from '../types'
+import type { FrameTemplate } from '../types'
+import { PHOTO_FILTERS } from '../constants/filters'
 import { FrameCardPreview } from './FrameCardPreview'
 import { sound } from '../utils/sound'
 
 interface HomeDashboardProps {
   frames: FrameTemplate[]
-  user: User
   isDark: boolean
   onStartPhotobooth: (frame?: FrameTemplate) => void
   onStartUpload: (frame?: FrameTemplate) => void
-  onNavigateTab: (tab: 'frames' | 'my_frames' | 'events' | 'studio') => void
+  onNavigateTab: (tab: 'frames' | 'my_frames' | 'studio' | 'gallery') => void
   onSelectFrameDetail: (frame: FrameTemplate) => void
+  onOpenDonate: () => void
 }
 
 export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   frames,
-  user,
   isDark,
   onStartPhotobooth,
   onStartUpload,
   onNavigateTab,
   onSelectFrameDetail,
+  onOpenDonate,
 }) => {
-  const duoFrame = frames.find((f) => f.cols === 2) || frames[0]
-  const jeansFrame = frames.find((f) => f.illustration === 'denim_jeans') || frames[1]
-  const koranFrame = frames.find((f) => f.illustration === 'newspaper_press') || frames[2]
+  const musicFrame = frames.find((f) => f.id === 'ios_music_player_1x3') || frames[0]
+  const denimFrame = frames.find((f) => f.themeType === 'denim_street') || frames[1] || frames[0]
+  const koranFrame = frames.find((f) => f.themeType === 'newspaper') || frames[2] || frames[0]
+  const memeFrame = frames.find((f) => f.themeType === 'meme_viral') || frames[3] || frames[0]
+  const ticketFrame =
+    frames.find((f) => f.id === 'capturing_moments_maroon_1x3') || frames[4] || frames[0]
 
-  const actionCards = [
+  const secondaryCards = [
     {
-      id: 'photobooth',
-      title: 'Photobooth Studio',
-      subtitle: 'Live camera + Video Frame',
-      icon: Camera,
-      accentGrad: 'from-pink-500/30 via-purple-500/20 to-indigo-500/30',
-      iconColor: 'text-pink-400',
-      onClick: () => onStartPhotobooth(frames[0]),
-    },
-    {
-      id: 'duo',
-      title: 'Meme & Duo Grid',
-      subtitle: '2x3 grid + Meme Stickers',
+      id: 'meme_duo',
+      badge: 'PALING SERU',
+      title: 'Mode Meme & Duo',
+      description: 'Pose bareng frame meme viral, komik Spider-Man, plus stiker lucu.',
+      previewFrame: memeFrame,
       icon: Users,
-      accentGrad: 'from-rose-500/30 via-pink-500/20 to-amber-500/30',
-      iconColor: 'text-rose-400',
-      onClick: () => onStartPhotobooth(duoFrame),
+      onClick: () => onStartPhotobooth(memeFrame),
     },
     {
-      id: 'upload',
-      title: 'Upload Gallery',
-      subtitle: 'Import foto dari perangkat',
-      icon: Upload,
-      accentGrad: 'from-emerald-500/30 via-teal-500/20 to-cyan-500/30',
-      iconColor: 'text-emerald-400',
-      onClick: () => onStartUpload(frames[0]),
-    },
-    {
-      id: 'jeans_koran',
-      title: 'Denim & Koran',
-      subtitle: 'Jeans 501 & Daily Press',
-      icon: Aperture,
-      accentGrad: 'from-blue-500/30 via-indigo-500/20 to-amber-500/30',
-      iconColor: 'text-amber-400',
-      onClick: () => onSelectFrameDetail(jeansFrame),
+      id: 'denim_koran',
+      badge: 'POPULER',
+      title: 'Edisi Denim & Koran',
+      description: 'Gaya scrapbook jeans denim, kamera Nikon, dan koran harian The 1975.',
+      previewFrame: koranFrame,
+      icon: Layers,
+      onClick: () => onSelectFrameDetail(denimFrame),
     },
     {
       id: 'create_frame',
-      title: 'Create Frame',
-      subtitle: 'Desain frame kustom',
+      badge: 'KREASI',
+      title: 'Unggah & Buat Frame',
+      description: 'Pakai desain PNG/JPG dari Canva atau buat bingkai kustom langsung di sini.',
+      previewFrame: ticketFrame,
       icon: Palette,
-      accentGrad: 'from-amber-500/30 via-orange-500/20 to-yellow-500/30',
-      iconColor: 'text-amber-300',
-      onClick: () => onNavigateTab('my_frames'),
-    },
-    {
-      id: 'my_frames',
-      title: 'Frame Kita',
-      subtitle: user.role === 'member' ? 'Koleksi frame pribadi' : 'Wajib login member',
-      icon: FolderHeart,
-      accentGrad: 'from-cyan-500/30 via-sky-500/20 to-blue-500/30',
-      iconColor: 'text-cyan-400',
       onClick: () => onNavigateTab('my_frames'),
     },
   ]
@@ -98,104 +75,191 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   const featuredCollections = [
     {
       id: 'col_1',
-      title: 'Raw Indigo Denim 501 & Y2K Patchwork',
-      author: 'Denim Atelier ID',
-      tag: 'DENIM COLLECTION',
-      stats: '945 USED',
-      participants: 128,
-      bannerBg: 'from-blue-900/80 via-indigo-900/75 to-amber-700/70',
-      frame: jeansFrame,
+      title: 'Koleksi Denim & Scrapbook Jeans',
+      author: 'Studio Denim Urbooth',
+      tag: 'KOLEKSI DENIM',
+      stats: '1.420 kali dipakai',
+      frame: denimFrame,
     },
     {
       id: 'col_2',
-      title: 'The Urbooth Daily Press — Headline Koran',
-      author: 'Editorial Press Gazette',
-      tag: 'NEWSPAPER EDITION',
-      stats: '1,120 USED',
-      participants: 215,
-      bannerBg: 'from-stone-800/85 via-neutral-800/80 to-amber-900/75',
+      title: 'The 1975 — Koran & Strip Film',
+      author: 'Redaksi Pers Urbooth',
+      tag: 'EDISI KORAN',
+      stats: '2.290 kali dipakai',
       frame: koranFrame,
     },
   ]
 
+  const mutedText = isDark ? 'text-[#B8B8C4]' : 'text-slate-600'
+
   return (
     <div className="w-full space-y-10 pb-12">
-      {/* Top Glass Hero Welcome */}
-      <div
-        className={`rounded-3xl p-6 sm:p-8 relative overflow-hidden ${
+      {/* ==================== AKSI UTAMA DOMINAN: STUDIO PHOTOBOOTH ==================== */}
+      <section
+        className={`p-6 sm:p-8 relative overflow-hidden ${
           isDark ? 'glass-panel-dark' : 'glass-panel-light'
         }`}
       >
-        <div className="max-w-2xl">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#EC4899]/15 text-[#EC4899] text-[11px] font-extrabold tracking-wider uppercase mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>GLASSMORPHISM STUDIO • 108+ PRO FILTERS</span>
-          </div>
-          <h1 className="text-2xl sm:text-4xl font-display font-black tracking-tight">
-            Ready to capture your moments?
-          </h1>
-          <p className="text-xs sm:text-sm opacity-75 mt-1.5">
-            Pilih mode pengambilan foto, eksplorasi frame Jeans, Koran & Meme, atau buat frame
-            kamu sendiri.
-          </p>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          {/* Kiri: Judul Hero, Deskripsi Kontras Tinggi, dan Satu Tombol Utama */}
+          <div className="lg:col-span-7 space-y-5">
+            <div className="badge-outline inline-flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>
+                {frames.length} Frame • {PHOTO_FILTERS.length} Filter
+              </span>
+            </div>
 
-        {/* 6 Glassmorphic Action Cards */}
-        <div className="mt-7 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-          {actionCards.map((card) => {
-            const Icon = card.icon
-            return (
+            <h1 className="text-hero max-w-[16ch]">
+              Siap abadikan momen{' '}
+              <span className="text-[#FFB020]">seru kamu?</span>
+            </h1>
+
+            <p className={`text-[16px] leading-[1.6] max-w-xl ${mutedText}`}>
+              Langsung mulai sesi foto di Studio Photobooth dengan kamera langsung, rekaman Video
+              Frame mulus 30 FPS, stiker meme, dan pilihan frame estetik tanpa perlu daftar akun.
+            </p>
+
+            {/* Hanya SATU tombol utama solid var(--accent) di layar */}
+            <div className="flex flex-wrap items-center gap-3.5 pt-1">
               <button
-                key={card.id}
                 onClick={() => {
                   sound.playClick()
-                  card.onClick()
+                  onStartPhotobooth(musicFrame)
                 }}
-                className={`group p-3.5 rounded-2xl text-left transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between cursor-pointer ${
-                  isDark
-                    ? 'glass-card-dark hover:border-pink-500/50'
-                    : 'glass-card-light hover:border-pink-500/50'
+                className="btn-primary px-6 py-4 text-[16px] flex items-center gap-2.5 cursor-pointer"
+              >
+                <Camera className="w-5 h-5" />
+                <span>Mulai Studio Photobooth</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => {
+                  sound.playClick()
+                  onStartUpload(musicFrame)
+                }}
+                className={`btn-secondary px-5 py-4 text-[14px] flex items-center gap-2 cursor-pointer ${
+                  isDark ? '' : '!bg-white !text-[#0F0F14] !border-slate-300'
                 }`}
               >
-                <div
-                  className={`w-full h-24 rounded-xl bg-gradient-to-br ${card.accentGrad} border border-white/15 flex items-center justify-center mb-3 transition-transform group-hover:scale-[1.03]`}
-                >
-                  <Icon className={`w-10 h-10 ${card.iconColor} drop-shadow`} />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-xs sm:text-sm leading-tight">
-                      {card.title}
-                    </h3>
-                    {card.id === 'my_frames' && user.role === 'guest' && (
-                      <Lock className="w-3 h-3 text-amber-400 shrink-0" />
-                    )}
-                  </div>
-                  <p className="text-[11px] opacity-65 mt-0.5 leading-snug">
-                    {card.subtitle}
-                  </p>
-                </div>
+                <Upload className="w-4 h-4 text-[#FFB020]" />
+                <span>Unggah foto dari galeri</span>
               </button>
-            )
-          })}
-        </div>
-      </div>
+            </div>
 
-      {/* Featured Frame Collections (Jeans & Newspaper Koran) */}
+            <div className={`flex flex-wrap items-center gap-x-5 gap-y-2 pt-2 text-[14px] font-semibold ${mutedText}`}>
+              <span className="flex items-center gap-1.5">
+                <Video className="w-4 h-4 text-[#FFB020]" />
+                Video Frame & Timelapse otomatis
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-[#FFB020]" />
+                {frames.length} desain frame siap pakai
+              </span>
+            </div>
+          </div>
+
+          {/* Kanan: Pratinjau Nyata Kolase 3 Frame Berisi Foto Contoh */}
+          <div className="lg:col-span-5 flex items-center justify-center">
+            <div
+              onClick={() => {
+                sound.playClick()
+                onStartPhotobooth(musicFrame)
+              }}
+              title="Klik untuk langsung foto dengan frame ini"
+              className={`relative w-full max-w-sm h-72 sm:h-80 rounded-[16px] p-4 flex items-center justify-center cursor-pointer group border transition-colors ${
+                isDark
+                  ? 'bg-[#0F0F14]/75 border-white/12 hover:border-[#FFB020]'
+                  : 'bg-slate-200/70 border-slate-300 hover:border-[#FFB020]'
+              }`}
+            >
+              <div className="absolute -left-1 sm:left-3 top-7 h-52 sm:h-56 -rotate-6 opacity-90 group-hover:-rotate-10 transition-transform duration-300">
+                <FrameCardPreview
+                  frame={denimFrame}
+                  className="h-full w-auto rounded-lg shadow-lg"
+                />
+              </div>
+
+              <div className="relative z-10 h-60 sm:h-68 group-hover:scale-105 transition-transform duration-300">
+                <FrameCardPreview
+                  frame={musicFrame}
+                  className="h-full w-auto rounded-xl shadow-xl ring-1 ring-white/20"
+                />
+              </div>
+
+              <div className="absolute -right-1 sm:right-3 top-7 h-52 sm:h-56 rotate-6 opacity-90 group-hover:rotate-10 transition-transform duration-300">
+                <FrameCardPreview
+                  frame={koranFrame}
+                  className="h-full w-auto rounded-lg shadow-lg"
+                />
+              </div>
+
+              <span className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 px-3.5 py-1 rounded-full bg-[#0F0F14] border border-white/15 text-white text-[12px] font-semibold whitespace-nowrap">
+                Pratinjau hasil frame nyata
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==================== 3 KARTU AKSI SEKUNDER DENGAN PRATINJAU NYATA ==================== */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {secondaryCards.map((card) => {
+          const Icon = card.icon
+          return (
+            <button
+              key={card.id}
+              onClick={() => {
+                sound.playClick()
+                card.onClick()
+              }}
+              className={`group p-5 text-left transition-all duration-200 hover:-translate-y-1 flex items-center gap-4 cursor-pointer ${
+                isDark
+                  ? 'glass-card-dark hover:border-[#FFB020]'
+                  : 'glass-card-light hover:border-[#FFB020]'
+              }`}
+            >
+              <div
+                className={`w-24 h-32 shrink-0 rounded-xl p-2 flex items-center justify-center overflow-hidden border ${
+                  isDark
+                    ? 'bg-[#0F0F14]/80 border-white/12'
+                    : 'bg-slate-200/70 border-slate-300'
+                }`}
+              >
+                <FrameCardPreview
+                  frame={card.previewFrame}
+                  className="max-h-full w-auto rounded group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <span className="badge-outline inline-flex items-center gap-1">
+                  <Icon className="w-3 h-3" />
+                  <span>{card.badge}</span>
+                </span>
+                <h3 className="font-semibold text-[16px] leading-snug">{card.title}</h3>
+                <p className={`text-[14px] leading-[1.6] ${mutedText}`}>{card.description}</p>
+              </div>
+            </button>
+          )
+        })}
+      </section>
+
+      {/* ==================== KOLEKSI PILIHAN ==================== */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-extrabold">
-            Featured Collections (Denim Jeans & Koran)
-          </h2>
+          <h2 className="text-heading">Koleksi pilihan</h2>
           <button
             onClick={() => {
               sound.playClick()
               onNavigateTab('frames')
             }}
-            className="text-xs font-bold text-[#EC4899] hover:underline flex items-center gap-1 cursor-pointer"
+            className="text-[14px] font-semibold text-[#FFB020] hover:underline flex items-center gap-1 cursor-pointer"
           >
-            <span>Lihat Semua Frame</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <span>Lihat semua frame</span>
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
 
@@ -207,72 +271,61 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 sound.playClick()
                 onSelectFrameDetail(ev.frame)
               }}
-              className={`group rounded-3xl overflow-hidden cursor-pointer transition-all hover:-translate-y-1 ${
-                isDark ? 'glass-card-dark' : 'glass-card-light'
+              className={`group overflow-hidden cursor-pointer transition-all hover:-translate-y-1 ${
+                isDark
+                  ? 'glass-card-dark hover:border-[#FFB020]'
+                  : 'glass-card-light hover:border-[#FFB020]'
               }`}
             >
               <div
-                className={`relative h-44 w-full bg-gradient-to-br ${ev.bannerBg} p-6 flex items-center justify-between overflow-hidden`}
+                className={`relative h-48 w-full p-6 flex items-center justify-between overflow-hidden border-b ${
+                  isDark ? 'bg-[#16161E] border-white/12' : 'bg-slate-100 border-slate-200'
+                }`}
               >
-                <div className="z-10 max-w-xs space-y-2">
-                  <span className="px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md text-white text-[10px] font-bold tracking-wider uppercase">
-                    {ev.tag}
-                  </span>
-                  <h3 className="font-display font-black text-white text-xl sm:text-2xl leading-tight">
-                    {ev.title}
-                  </h3>
+                <div className="z-10 max-w-xs space-y-2.5">
+                  <span className="badge-solid inline-block">{ev.tag}</span>
+                  <h3 className="font-extrabold text-[24px] leading-[1.2]">{ev.title}</h3>
                 </div>
 
-                <div className="z-10 h-36">
+                <div className="z-10 h-40">
                   <FrameCardPreview
                     frame={ev.frame}
-                    className="h-full w-auto rounded shadow-2xl rotate-3 group-hover:rotate-0 transition-transform"
+                    className="h-full w-auto rounded-lg shadow-lg rotate-3 group-hover:rotate-0 transition-transform"
                   />
                 </div>
               </div>
 
               <div className="p-4 flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-pink-500 to-amber-400 flex items-center justify-center text-[10px] font-bold text-white">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-7 h-7 rounded-full bg-[#FFB020] flex items-center justify-center text-[12px] font-extrabold text-[#0F0F14]">
                     {ev.author[0]}
                   </div>
-                  <span className="text-xs font-semibold opacity-80">{ev.author}</span>
+                  <span className={`text-[14px] font-semibold ${mutedText}`}>{ev.author}</span>
                 </div>
 
-                <div className="flex items-center space-x-3 text-[11px] font-mono">
-                  <span className="text-[#EC4899] flex items-center gap-1 font-semibold">
-                    <Clock className="w-3 h-3" />
-                    {ev.stats}
-                  </span>
-                  <span className="flex items-center gap-1 opacity-70">
-                    <Users className="w-3 h-3" />
-                    {ev.participants}
-                  </span>
-                </div>
+                <span className="text-[12px] font-semibold text-[#FFB020]">{ev.stats}</span>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Newest Frames Row */}
+      {/* ==================== FRAME TERBARU ==================== */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-extrabold">Newest Frames</h2>
-            <span className="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-[#EC4899]/15 text-[#EC4899]">
-              {frames.length} TEMPLATES
-            </span>
+          <div className="flex items-center gap-3">
+            <h2 className="text-heading">Frame terbaru</h2>
+            <span className="badge-outline">{frames.length} DESAIN</span>
           </div>
           <button
             onClick={() => {
               sound.playClick()
               onNavigateTab('frames')
             }}
-            className="text-xs font-bold text-[#EC4899] hover:underline flex items-center gap-1 cursor-pointer"
+            className="text-[14px] font-semibold text-[#FFB020] hover:underline flex items-center gap-1 cursor-pointer"
           >
-            <span>Browse All Frames</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <span>Jelajahi semua frame</span>
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
 
@@ -284,19 +337,19 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 sound.playClick()
                 onSelectFrameDetail(frame)
               }}
-              className={`group relative rounded-3xl p-2.5 cursor-pointer transition-all hover:-translate-y-1 flex flex-col justify-between ${
+              className={`group relative p-3 cursor-pointer transition-all hover:-translate-y-1 flex flex-col justify-between ${
                 isDark
-                  ? 'glass-card-dark hover:border-[#EC4899]/60'
-                  : 'glass-card-light hover:border-[#EC4899]'
+                  ? 'glass-card-dark hover:border-[#FFB020]'
+                  : 'glass-card-light hover:border-[#FFB020]'
               }`}
             >
-              <span className="absolute top-4 right-4 z-10 px-2 py-0.5 rounded-full bg-[#EC4899] text-white text-[9px] font-extrabold tracking-wider uppercase shadow">
-                {frame.badgeText || 'NEW'}
+              <span className="badge-solid absolute top-4 right-4 z-10">
+                {frame.badgeText || 'BARU'}
               </span>
 
               <div
-                className={`w-full h-52 rounded-2xl flex items-center justify-center p-2 overflow-hidden ${
-                  isDark ? 'bg-slate-950/60' : 'bg-slate-200/60'
+                className={`w-full h-52 rounded-xl flex items-center justify-center p-2 overflow-hidden ${
+                  isDark ? 'bg-[#0F0F14]/75' : 'bg-slate-200/70'
                 }`}
               >
                 <FrameCardPreview
@@ -305,21 +358,64 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
                 />
               </div>
 
-              <div className="mt-2.5 px-1">
-                <h4 className="font-bold text-xs truncate">{frame.name}</h4>
-                <div className="flex items-center justify-between text-[10px] mt-1">
-                  <span className="opacity-65">
-                    by {frame.creatorName.split(' ')[0]}
-                  </span>
-                  <span className="text-emerald-400 font-mono flex items-center gap-0.5">
-                    <Sparkles className="w-2.5 h-2.5" />
-                    {frame.usageCount}
-                  </span>
+              <div className="mt-3 px-1">
+                <h4 className="font-semibold text-[14px] truncate">{frame.name}</h4>
+                <div className={`flex items-center justify-between text-[12px] mt-1 ${mutedText}`}>
+                  <span>{frame.slots} Foto</span>
+                  <span className="text-[#FFB020] font-semibold">{frame.usageCount}x</span>
                 </div>
               </div>
             </div>
           ))}
         </div>
+      </section>
+
+      {/* ==================== KARTU DONASI SAWERIA ==================== */}
+      <section
+        className={`p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 ${
+          isDark ? 'glass-panel-dark' : 'glass-panel-light'
+        }`}
+      >
+        <div className="space-y-3 max-w-xl text-center md:text-left">
+          <span className="badge-outline inline-flex items-center gap-1.5">
+            <Heart className="w-3.5 h-3.5 fill-current" />
+            <span>DUKUNG URBOOTH</span>
+          </span>
+          <h2 className="text-heading">Donasi seikhlasnya via Saweria</h2>
+          <p className={`text-[14px] leading-[1.6] ${mutedText}`}>
+            Semua fitur photobooth, filter, stiker, dan frame di Urbooth gratis dipakai kapan saja.
+            Kalau kamu suka dan ingin bantu web ini makin bagus lagi dengan update frame baru, scan
+            QR Saweria di samping ya.
+          </p>
+          <div className="pt-1 flex justify-center md:justify-start">
+            <button
+              onClick={() => {
+                sound.playClick()
+                onOpenDonate()
+              }}
+              className={`btn-secondary px-5 py-3 text-[14px] flex items-center gap-2 cursor-pointer ${
+                isDark ? '' : '!bg-white !text-[#0F0F14] !border-slate-300'
+              }`}
+            >
+              <QrCode className="w-4 h-4 text-[#FFB020]" />
+              <span>Perbesar QR Saweria</span>
+            </button>
+          </div>
+        </div>
+
+        <button
+          onClick={() => {
+            sound.playClick()
+            onOpenDonate()
+          }}
+          title="Klik untuk memperbesar QR Saweria"
+          className="shrink-0 p-3.5 rounded-[16px] bg-white border border-slate-200 flex flex-col items-center cursor-pointer transition-transform hover:scale-105"
+        >
+          <img src="/saweria-qr.png" alt="QR Code Saweria" className="w-36 h-36 object-contain" />
+          <span className="mt-1.5 text-[12px] font-semibold text-[#0F0F14]">
+            Scan QRIS • Saweria
+          </span>
+        </button>
       </section>
     </div>
   )

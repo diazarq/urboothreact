@@ -6,7 +6,6 @@ import {
   Archive,
   Check,
   Video,
-  Film,
   Play,
   Pause,
   X,
@@ -19,6 +18,9 @@ import {
   Copy,
   Eraser,
 } from 'lucide-react'
+import { ResultActions } from './ResultActions'
+import { QrDownloadModal } from './QrDownloadModal'
+import { buildResultFilename, dataUrlToBlob, downloadBlob } from '../utils/download'
 import type {
   FilterCategory,
   FilterId,
@@ -93,7 +95,6 @@ interface PhotoReviewProps {
     venue: string,
     filterId: FilterId
   ) => void
-  onOpenAuth: () => void
 }
 
 export const PhotoReview: React.FC<PhotoReviewProps> = ({
@@ -110,7 +111,6 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
   onRetakeAll,
   onRetakeSlot,
   onSaveToArchive,
-  onOpenAuth,
 }) => {
   // Start strictly at Step 1 ('frame'). Forward navigation only via NEXT button; backward via BACK or clicking previous completed steps!
   const [activeStep, setActiveStep] = useState<EditorStepId>('frame')
@@ -151,6 +151,8 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
   const [showDate, setShowDate] = useState(true)
 
   const [compositeUrl, setCompositeUrl] = useState<string>('')
+  const [qrModalOpen, setQrModalOpen] = useState(false)
+  const [qrPhotoBlob, setQrPhotoBlob] = useState<Blob | null>(null)
   const [isSaved, setIsSaved] = useState(false)
   const [isPlayingVideo, setIsPlayingVideo] = useState(true)
   const [isExportingVideo, setIsExportingVideo] = useState(false)
@@ -160,35 +162,6 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
   const loadedClipsRef = useRef<HTMLImageElement[][]>([])
   const loadedVideosRef = useRef<(HTMLVideoElement | null)[]>([])
   const loadedStickersMapRef = useRef<Map<string, HTMLImageElement>>(new Map())
-
-  // Load real 30fps HTMLVideoElements recorded from MediaRecorder
-  useEffect(() => {
-    const videos: (HTMLVideoElement | null)[] = Array.from({ length: frame.slots }).map(
-      (_, idx) => {
-        const url = videoUrls[idx]
-        if (!url) return null
-        const vid = document.createElement('video')
-        vid.src = url
-        vid.muted = true
-        vid.loop = true
-        vid.playsInline = true
-        vid.preload = 'auto'
-        vid.load()
-        return vid
-      }
-    )
-    loadedVideosRef.current = videos
-
-    return () => {
-      videos.forEach((v) => {
-        if (v) {
-          v.pause()
-          v.removeAttribute('src')
-          v.load()
-        }
-      })
-    }
-  }, [videoUrls, frame.slots])
 
   useEffect(() => {
     setVenue(frame.defaultVenue)
@@ -303,27 +276,31 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
     }
   }, [updateStaticComposite])
 
-  // Control real <video> playback cleanly (only play on video_frame / timelapse!)
+  // Control real DOM-mounted <video> playback cleanly (only play on video_frame / timelapse!)
   useEffect(() => {
     const videos = loadedVideosRef.current
     if (activeStep === 'video_frame' && isPlayingVideo) {
       videos.forEach((v) => {
         if (v) {
+          v.muted = true
           v.playbackRate = 1.0
+          if (v.ended) v.currentTime = 0
           v.play().catch(() => {})
         }
       })
     } else if (activeStep === 'timelapse' && isPlayingVideo) {
       videos.forEach((v) => {
         if (v) {
+          v.muted = true
           v.playbackRate = 2.0
+          if (v.ended) v.currentTime = 0
           v.play().catch(() => {})
         }
       })
     } else {
       videos.forEach((v) => v?.pause())
     }
-  }, [activeStep, isPlayingVideo, videoUrls])
+  }, [activeStep, isPlayingVideo, videoUrls, frame.slots])
 
   // Canvas Rendering Engine (Smooth 30fps real video playback like real Photobooth!):
   // - Steps 1..4 (frame, layout, filter, sticker): STATIC PHOTO ONLY (no video motion!)
@@ -336,8 +313,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
 
     const renderFrame = (now: number) => {
       const isAnimatedStep = activeStep === 'video_frame' || activeStep === 'timelapse'
-      // Smooth 30fps (~33ms) for real photobooth video playback
-      if (isAnimatedStep && now - lastDrawTime < 32) {
+      if (isAnimatedStep && now - lastDrawTime < 30) {
         animId = requestAnimationFrame(renderFrame)
         return
       }
@@ -352,11 +328,14 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
           )
 
           if (validVideos.length > 0) {
-            // Switch smoothly between each slot's real 2x-speed video every ~1.5s
             const vIdx = Math.floor(tick / 45) % validVideos.length
+            const activeVid = validVideos[vIdx]
+            if (isPlayingVideo && activeVid.paused) {
+              activeVid.play().catch(() => {})
+            }
             drawFramelessTimelapseOnCanvas(
               canvas,
-              validVideos[vIdx],
+              activeVid,
               selectedFilter,
               videoFilter,
               1,
@@ -391,15 +370,15 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
           }
         } else if (activeStep === 'video_frame') {
           tick += isPlayingVideo ? 1 : 0
-          const hasRealVideos = loadedVideosRef.current.some(
-            (v) => v && v.readyState >= 2
-          )
 
           const currentSources: (HTMLImageElement | HTMLVideoElement | null)[] = Array.from({
             length: frame.slots,
           }).map((_, slotIdx) => {
             const vid = loadedVideosRef.current[slotIdx]
             if (vid && vid.readyState >= 2) {
+              if (isPlayingVideo && vid.paused) {
+                vid.play().catch(() => {})
+              }
               return vid
             }
             const slotClip = loadedClipsRef.current[slotIdx]
@@ -408,15 +387,6 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
             }
             return loadedShotsRef.current[slotIdx] || null
           })
-
-          // Only apply gentle Ken Burns zoom if user uploaded static photos (no real video)
-          const zoomPerSlot = hasRealVideos
-            ? undefined
-            : Array.from({ length: frame.slots }).map((_, slotIdx) => {
-                if (!isPlayingVideo) return 1
-                const wave = Math.sin(tick * 0.05 + slotIdx * 1.3)
-                return 1.03 + wave * 0.025
-              })
 
           const scrubberProgress = 0.65 + ((tick % 120) / 120) * 0.32
 
@@ -432,7 +402,6 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
             placedStickers,
             videoFilter,
             animProgress: scrubberProgress,
-            zoomPerSlot,
             loadedStickerMap: loadedStickersMapRef.current,
             fastPreview: true,
             mirrorVideo: isMirrored,
@@ -604,20 +573,23 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
   const handleDownloadPhoto = (format: 'png' | 'jpeg') => {
     if (!compositeUrl) return
     sound.playShutter()
-    const filename = `URBOOTH_${frame.code}_${new Date().toISOString().slice(0, 10)}.${
-      format === 'jpeg' ? 'jpg' : 'png'
-    }`
-    const link = document.createElement('a')
-    link.download = filename
-    link.href = compositeUrl
-    link.click()
+    const blob = dataUrlToBlob(compositeUrl)
+    const ext = format === 'jpeg' ? 'jpg' : 'png'
+    downloadBlob(blob, buildResultFilename(ext))
 
     confetti({
       particleCount: 55,
       spread: 70,
       origin: { y: 0.8 },
-      colors: ['#EC4899', '#38BDF8', '#FACC15', '#FFFFFF'],
+      colors: ['#FFB020', '#38BDF8', '#FACC15', '#FFFFFF'],
     })
+  }
+
+  const handleOpenQrDownload = () => {
+    if (!compositeUrl) return
+    const blob = dataUrlToBlob(compositeUrl)
+    setQrPhotoBlob(blob)
+    setQrModalOpen(true)
   }
 
   const handleDownloadCanvasVideo = (label: string) => {
@@ -642,11 +614,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
 
       recorder.onstop = () => {
         const blob = new Blob(chunks, { type: 'video/webm' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `URBOOTH_${label}_${frame.code}_${Date.now()}.webm`
-        a.click()
+        downloadBlob(blob, buildResultFilename('webm', `urbooth-${label.toLowerCase()}`))
         setIsExportingVideo(false)
 
         confetti({
@@ -671,12 +639,8 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
 
   const handleSaveArchiveClick = () => {
     sound.playClick()
-    if (user.role === 'guest') {
-      onOpenAuth()
-    } else {
-      onSaveToArchive(compositeUrl, caption, venue, selectedFilter)
-      setIsSaved(true)
-    }
+    onSaveToArchive(compositeUrl, caption, venue, selectedFilter)
+    setIsSaved(true)
   }
 
   const currentStepIndex = EDITOR_STEPS.findIndex((s) => s.id === activeStep)
@@ -702,7 +666,6 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
   const compatibleFrames = allFrames.filter(
     (f) =>
       f.slots <= shots.length &&
-      (user.role !== 'guest' || !f.isLocked) &&
       (!frameSearch.trim() ||
         f.name.toLowerCase().includes(frameSearch.toLowerCase()) ||
         f.tag.toLowerCase().includes(frameSearch.toLowerCase()))
@@ -855,7 +818,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                 sound.playClick()
                 onRetakeAll()
               }}
-              className="px-3 py-1.5 rounded-full bg-black/60 hover:bg-[#EC4899] backdrop-blur-md text-white text-[11px] font-bold flex items-center space-x-1.5 border border-white/15 transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-full bg-black/60 hover:bg-[#FFB020] backdrop-blur-md text-white text-[11px] font-bold flex items-center space-x-1.5 border border-white/15 transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />
               <span>Retake Foto</span>
@@ -994,7 +957,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                   <h3 className="text-sm font-extrabold tracking-wider uppercase">
                     1. PILIH DESAIN FRAME
                   </h3>
-                  <span className="text-[10px] font-mono opacity-60">
+                  <span className="text-[10px] font-semibold opacity-60">
                     {compatibleFrames.length} Frame
                   </span>
                 </div>
@@ -1006,7 +969,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                     value={frameSearch}
                     onChange={(e) => setFrameSearch(e.target.value)}
                     placeholder="Cari frame (Jeans, Koran, Music, Meme...)"
-                    className={`w-full pl-9 pr-3 py-2 rounded-xl border text-xs font-medium focus:outline-none focus:border-[#EC4899] ${
+                    className={`w-full pl-9 pr-3 py-2 rounded-xl border text-xs font-medium focus:outline-none focus:border-[#FFB020] ${
                       isDark
                         ? 'bg-white/5 border-white/15 text-white'
                         : 'bg-slate-100 border-slate-300 text-slate-900'
@@ -1024,7 +987,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                       }}
                       className={`p-3 rounded-xl border text-left text-xs font-bold transition-all cursor-pointer ${
                         f.id === frame.id
-                          ? 'bg-[#EC4899] text-white border-[#EC4899] shadow-md'
+                          ? 'bg-[#FFB020] text-[#0F0F14] border-[#FFB020] shadow-md'
                           : isDark
                           ? 'glass-card-dark text-slate-300 hover:text-white'
                           : 'glass-card-light text-slate-700 hover:text-black'
@@ -1055,7 +1018,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                     }}
                     className={`px-3 py-1 rounded-lg border text-xs font-bold cursor-pointer ${
                       showDate
-                        ? 'bg-[#EC4899] text-white border-[#EC4899]'
+                        ? 'bg-[#FFB020] text-[#0F0F14] border-[#FFB020]'
                         : 'border-slate-500 text-slate-400'
                     }`}
                   >
@@ -1083,7 +1046,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white text-[10px] font-bold transition-opacity">
-                          <RotateCcw className="w-3.5 h-3.5 mb-1 text-[#EC4899]" />
+                          <RotateCcw className="w-3.5 h-3.5 mb-1 text-[#FFB020]" />
                           <span>Retake #{idx + 1}</span>
                         </div>
                       </div>
@@ -1100,7 +1063,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                   <h3 className="text-sm font-extrabold tracking-wider uppercase">
                     3. PRO FILTERS ({PHOTO_FILTERS.length})
                   </h3>
-                  <span className="px-2 py-0.5 rounded-full bg-[#EC4899]/15 text-[#EC4899] text-[10px] font-bold">
+                  <span className="px-2 py-0.5 rounded-full bg-[#FFB020]/15 text-[#FFB020] text-[10px] font-bold">
                     {filteredPhotoFilters.length} Hasil
                   </span>
                 </div>
@@ -1112,7 +1075,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                     value={filterSearch}
                     onChange={(e) => setFilterSearch(e.target.value)}
                     placeholder="Cari dari 108+ filter..."
-                    className={`w-full pl-9 pr-3 py-2 rounded-xl border text-xs font-medium focus:outline-none focus:border-[#EC4899] ${
+                    className={`w-full pl-9 pr-3 py-2 rounded-xl border text-xs font-medium focus:outline-none focus:border-[#FFB020] ${
                       isDark
                         ? 'bg-white/5 border-white/15 text-white'
                         : 'bg-slate-100 border-slate-300 text-slate-900'
@@ -1130,7 +1093,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                       }}
                       className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold cursor-pointer transition-all ${
                         filterCat === cat
-                          ? 'bg-[#EC4899] text-white shadow'
+                          ? 'bg-[#FFB020] text-[#0F0F14] shadow'
                           : isDark
                           ? 'bg-white/5 text-slate-300 hover:bg-white/10'
                           : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -1154,7 +1117,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                         }}
                         className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                           active
-                            ? 'bg-[#EC4899] text-white border-[#EC4899] shadow-md'
+                            ? 'bg-[#FFB020] text-[#0F0F14] border-[#FFB020] shadow-md'
                             : isDark
                             ? 'glass-card-dark text-slate-200 hover:border-white/30'
                             : 'glass-card-light text-slate-800 hover:border-slate-400'
@@ -1189,7 +1152,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                     }}
                     className={`px-3 py-1.5 rounded-lg border text-xs font-bold flex items-center gap-1.5 cursor-pointer ${
                       stickerTab === 'All'
-                        ? 'bg-[#EC4899] text-white border-[#EC4899]'
+                        ? 'bg-[#FFB020] text-[#0F0F14] border-[#FFB020]'
                         : isDark
                         ? 'border-white/15 text-slate-300'
                         : 'border-slate-300 text-slate-700'
@@ -1238,7 +1201,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                       }}
                       className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold cursor-pointer ${
                         stickerGroup === g.id
-                          ? 'bg-[#EC4899] text-white'
+                          ? 'bg-[#FFB020] text-[#0F0F14]'
                           : isDark
                           ? 'bg-white/5 text-slate-300'
                           : 'bg-slate-100 text-slate-700'
@@ -1257,8 +1220,8 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                       title={`Tambah ${st.label}`}
                       className={`group p-2.5 rounded-2xl border flex flex-col items-center justify-center transition-all hover:scale-105 cursor-pointer ${
                         isDark
-                          ? 'glass-card-dark hover:border-[#EC4899]'
-                          : 'glass-card-light hover:border-[#EC4899]'
+                          ? 'glass-card-dark hover:border-[#FFB020]'
+                          : 'glass-card-light hover:border-[#FFB020]'
                       }`}
                     >
                       <img
@@ -1280,7 +1243,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                   }`}
                 >
                   <div className="flex items-center space-x-2">
-                    <Eraser className="w-4 h-4 text-[#EC4899]" />
+                    <Eraser className="w-4 h-4 text-[#FFB020]" />
                     <div>
                       <p className="text-[11px] font-bold leading-tight">
                         Hapus Background Otomatis
@@ -1298,7 +1261,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                     }}
                     className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold cursor-pointer ${
                       autoRemoveStickerBg
-                        ? 'bg-[#EC4899] text-white'
+                        ? 'bg-[#FFB020] text-[#0F0F14]'
                         : 'bg-slate-700 text-slate-300'
                     }`}
                   >
@@ -1363,7 +1326,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                         }}
                         className={`py-4 px-4 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-[#EC4899] text-white border-[#EC4899] shadow-md'
+                            ? 'bg-[#FFB020] text-[#0F0F14] border-[#FFB020] shadow-md'
                             : isDark
                             ? 'glass-card-dark text-slate-200 hover:bg-white/10'
                             : 'glass-card-light text-slate-800 hover:bg-white'
@@ -1388,7 +1351,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                     }}
                     className={`px-3 py-1 rounded-lg border text-[11px] font-bold cursor-pointer transition-all ${
                       showStickers
-                        ? 'bg-[#EC4899] border-[#EC4899] text-white'
+                        ? 'bg-[#FFB020] border-[#FFB020] text-white'
                         : 'border-slate-400 text-slate-400'
                     }`}
                   >
@@ -1406,7 +1369,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                         : 'glass-card-light hover:bg-slate-100 text-slate-900'
                     }`}
                   >
-                    <Video className="w-4 h-4 text-[#EC4899]" />
+                    <Video className="w-4 h-4 text-[#FFB020]" />
                     <span>
                       {isExportingVideo
                         ? 'Merekam Video Frame (3 detik)...'
@@ -1421,74 +1384,61 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
             {activeStep === 'timelapse' && (
               <div className="space-y-4">
                 <h3 className="text-sm font-extrabold tracking-wider uppercase">
-                  6. TIMELAPSE (FOTO MURNI) & EXPORT
+                  6. TIMELAPSE & UNDUH HASIL
                 </h3>
-                <p className="text-xs opacity-75">
-                  Timelapse ditampilkan murni tanpa frame. Unduh Photo Strip HD, Video Frame, atau
-                  Timelapse murni kamu di bawah ini!
+                <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                  Pilih <strong>Unduh Foto</strong> langsung ke perangkat ini atau{' '}
+                  <strong>Unduh via QR</strong> untuk scan dan simpan langsung dari HP kamu.
                 </p>
 
-                <div className="space-y-2.5 pt-2">
-                  <button
-                    onClick={() => handleDownloadPhoto('png')}
-                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#EC4899] to-indigo-500 hover:opacity-95 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-lg cursor-pointer transition-all"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>Download Photo Strip (PNG HD)</span>
-                  </button>
+                <div className="space-y-3 pt-1">
+                  <ResultActions
+                    onDownloadPhoto={() => handleDownloadPhoto('png')}
+                    onDownloadVideo={() => handleDownloadCanvasVideo('TIMELAPSE')}
+                    onOpenQrDownload={handleOpenQrDownload}
+                    hasVideo={true}
+                    isExportingVideo={isExportingVideo}
+                    disabled={!compositeUrl}
+                    isDark={isDark}
+                  />
 
                   <button
-                    onClick={() => handleDownloadCanvasVideo('TIMELAPSE')}
-                    disabled={isExportingVideo}
-                    className={`w-full py-3.5 rounded-xl border font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 cursor-pointer transition-all ${
-                      isDark
-                        ? 'glass-card-dark hover:bg-white/15 text-white'
-                        : 'bg-slate-900 text-white hover:bg-slate-800'
-                    }`}
-                  >
-                    <Film className="w-4 h-4 text-[#EC4899]" />
-                    <span>
-                      {isExportingVideo
-                        ? 'Menyimpan Timelapse (.WEBM)...'
-                        : 'Download Timelapse (.WEBM)'}
-                    </span>
-                  </button>
-
-                  <button
+                    type="button"
                     onClick={() => handleDownloadPhoto('jpeg')}
-                    className={`w-full py-3 rounded-xl border font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 cursor-pointer transition-all ${
+                    className={`w-full py-3 rounded-2xl border font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all ${
                       isDark
-                        ? 'glass-card-dark text-slate-200'
-                        : 'glass-card-light text-slate-800'
+                        ? 'glass-card-dark text-slate-200 hover:bg-white/10'
+                        : 'glass-card-light text-slate-800 hover:bg-white'
                     }`}
                   >
                     <Download className="w-4 h-4" />
-                    <span>Download JPG</span>
+                    <span>Unduh Format JPG</span>
                   </button>
 
                   <button
+                    type="button"
                     onClick={handleSaveArchiveClick}
                     disabled={isSaved}
-                    className={`w-full py-3 rounded-xl border font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 cursor-pointer transition-all ${
+                    className={`w-full py-3 rounded-2xl border font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all ${
                       isSaved
                         ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
-                        : 'bg-[#EC4899]/15 border-[#EC4899]/40 text-[#EC4899]'
+                        : 'bg-[#FFB020]/15 border-[#FFB020]/40 text-[#FFB020]'
                     }`}
                   >
                     {isSaved ? (
                       <>
                         <Check className="w-4 h-4" />
-                        <span>Tersimpan di Galeri Akun!</span>
+                        <span>Tersimpan di Galeri!</span>
                       </>
                     ) : user.role !== 'guest' ? (
                       <>
                         <Archive className="w-4 h-4" />
-                        <span>Simpan ke Galeri Saya</span>
+                        <span>Simpan ke Galeri Lokal</span>
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-4 h-4" />
-                        <span>Login untuk Simpan ke Galeri</span>
+                        <span>Simpan ke Galeri</span>
                       </>
                     )}
                   </button>
@@ -1507,7 +1457,7 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                   : 'border-slate-300 text-slate-800 hover:bg-slate-100'
               }`}
             >
-              BACK
+              KEMBALI
             </button>
 
             <button
@@ -1518,11 +1468,61 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                   : 'bg-slate-900 text-white hover:bg-slate-800'
               }`}
             >
-              {activeStep === 'timelapse' ? 'DOWNLOAD' : 'NEXT'}
+              {activeStep === 'timelapse' ? 'UNDUH FOTO' : 'LANJUT'}
             </button>
           </div>
         </div>
       </div>
+
+      {/* Hidden DOM-mounted <video> elements so Chrome decodes every frame smoothly at 30fps */}
+      <div
+        aria-hidden="true"
+        className="fixed -left-[9999px] top-0 w-2 h-2 overflow-hidden opacity-0 pointer-events-none"
+      >
+        {videoUrls.map((url, idx) =>
+          url ? (
+            <video
+              key={`${idx}_${url}`}
+              ref={(el) => {
+                loadedVideosRef.current[idx] = el
+              }}
+              src={url}
+              muted
+              loop
+              playsInline
+              preload="auto"
+              onCanPlay={(e) => {
+                if (
+                  (activeStep === 'video_frame' || activeStep === 'timelapse') &&
+                  isPlayingVideo
+                ) {
+                  e.currentTarget.playbackRate = activeStep === 'timelapse' ? 2.0 : 1.0
+                  e.currentTarget.play().catch(() => {})
+                }
+              }}
+              onEnded={(e) => {
+                if (
+                  (activeStep === 'video_frame' || activeStep === 'timelapse') &&
+                  isPlayingVideo
+                ) {
+                  e.currentTarget.currentTime = 0
+                  e.currentTarget.play().catch(() => {})
+                }
+              }}
+            />
+          ) : null
+        )}
+      </div>
+
+      {/* Modal Opsi B: Unduh via QR */}
+      <QrDownloadModal
+        isOpen={qrModalOpen}
+        onClose={() => setQrModalOpen(false)}
+        photoBlob={qrPhotoBlob}
+        frameName={frame.name}
+        onDirectDownloadFallback={() => handleDownloadPhoto('png')}
+        isDark={isDark}
+      />
     </div>
   )
 }

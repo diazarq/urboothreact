@@ -55,21 +55,21 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
 
         <div className="w-full md:w-2/5 p-6 sm:p-8 flex flex-col justify-between overflow-y-auto bg-[#FAF9F6] border-t md:border-t-0 md:border-l border-[#D8D5CE]">
           <div>
-            <div className="flex items-center space-x-2 text-xs font-mono text-[#737069] mb-2">
-              <span className="w-2 h-2 rounded-full bg-pink-500 inline-block" />
+            <div className="flex items-center space-x-2 text-xs font-semibold text-[#737069] mb-2">
+              <span className="w-2 h-2 rounded-full text-[#FFB020] inline-block" />
               <span>URBOOTH MEMORY CARD</span>
             </div>
 
-            <h3 className="text-2xl font-handflair font-bold text-[#181818] mb-1 flex items-center gap-1.5">
+            <h3 className="text-2xl font-semibold font-bold text-[#181818] mb-1 flex items-center gap-1.5">
               {session.frameName}
-              <Heart className="w-4 h-4 text-pink-500 fill-pink-500" />
+              <Heart className="w-4 h-4 text-[#FFB020] fill-[#FFB020]" />
             </h3>
 
-            <p className="font-mono text-xs text-[#737069] mb-6">
+            <p className="font-semibold text-xs text-[#737069] mb-6">
               SERIAL: #{session.id.slice(-8).toUpperCase()}
             </p>
 
-            <div className="space-y-3.5 border-t border-b border-[#D8D5CE] py-4 text-xs font-mono">
+            <div className="space-y-3.5 border-t border-b border-[#D8D5CE] py-4 text-xs font-semibold">
               <div className="flex items-center justify-between">
                 <span className="text-[#737069]">CAPTURED DATE:</span>
                 <span className="text-[#181818] font-medium">
@@ -118,7 +118,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
           <div className="space-y-2.5 mt-8 pt-4 border-t border-[#D8D5CE]">
             <button
               onClick={handleDownload}
-              className="w-full py-3 bg-[#181818] hover:bg-[#383838] text-[#F7F6F2] font-mono text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition-all cursor-pointer rounded-md"
+              className="w-full py-3 bg-[#181818] hover:bg-[#383838] text-[#F7F6F2] font-semibold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition-all cursor-pointer rounded-md"
             >
               <Download className="w-4 h-4" />
               <span>Download Master Copy (PNG)</span>
@@ -126,7 +126,7 @@ export const LightboxModal: React.FC<LightboxModalProps> = ({
 
             <button
               onClick={handleDelete}
-              className="w-full py-2.5 bg-[#FAF9F6] hover:bg-red-50 text-red-700 hover:text-red-800 border border-[#D8D5CE] hover:border-red-300 font-mono text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition-all cursor-pointer rounded-md"
+              className="w-full py-2.5 bg-[#FAF9F6] hover:bg-red-50 text-red-700 hover:text-red-800 border border-[#D8D5CE] hover:border-red-300 font-semibold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 transition-all cursor-pointer rounded-md"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>Delete from Vault</span>

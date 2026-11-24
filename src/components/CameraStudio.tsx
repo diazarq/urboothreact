@@ -182,13 +182,15 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
 
     if (streamRef.current && typeof MediaRecorder !== 'undefined') {
       try {
-        const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
+        const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+          ? 'video/webm;codecs=vp9'
+          : MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
           ? 'video/webm;codecs=vp8'
           : MediaRecorder.isTypeSupported('video/webm')
           ? 'video/webm'
           : ''
         slotRecorder = mimeType
-          ? new MediaRecorder(streamRef.current, { mimeType, videoBitsPerSecond: 1_500_000 })
+          ? new MediaRecorder(streamRef.current, { mimeType, videoBitsPerSecond: 2_500_000 })
           : new MediaRecorder(streamRef.current)
 
         slotRecorder.ondataavailable = (ev) => {
@@ -205,7 +207,8 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
             }
           }
         })
-        slotRecorder.start(100)
+        // Tanpa timeslice agar menghasilkan 1 kontainer WebM utuh 30fps yang mulus tanpa patah
+        slotRecorder.start()
       } catch {
         slotRecorder = null
       }
@@ -338,11 +341,11 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
           </button>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="w-2 h-2 rounded-full bg-[#EC4899] animate-ping" />
+              <span className="w-2 h-2 rounded-full bg-[#FFB020] animate-ping" />
               <h2 className={`font-extrabold text-base ${isDark ? 'text-white' : 'text-zinc-900'}`}>
                 {selectedFrame.name}
               </h2>
-              <span className="px-2 py-0.5 rounded-full bg-[#EC4899]/15 text-[#EC4899] text-[10px] font-bold flex items-center gap-1">
+              <span className="px-2 py-0.5 rounded-full bg-[#FFB020]/15 text-[#FFB020] text-[10px] font-bold flex items-center gap-1">
                 <Video className="w-3 h-3" />
                 LIVE VIDEO FRAME READY
               </span>
@@ -367,7 +370,7 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
                 mode === 'camera'
-                  ? 'bg-[#EC4899] text-white'
+                  ? 'bg-[#FFB020] text-[#0F0F14]'
                   : isDark
                   ? 'text-zinc-400 hover:text-white'
                   : 'text-zinc-600 hover:text-black'
@@ -383,7 +386,7 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all ${
                 mode === 'upload'
-                  ? 'bg-[#EC4899] text-white'
+                  ? 'bg-[#FFB020] text-[#0F0F14]'
                   : isDark
                   ? 'text-zinc-400 hover:text-white'
                   : 'text-zinc-600 hover:text-black'
@@ -403,7 +406,7 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
                 }}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 cursor-pointer transition-all ${
                   settings.isMirrored
-                    ? 'bg-[#EC4899] text-white border-[#EC4899]'
+                    ? 'bg-[#FFB020] text-[#0F0F14] border-[#FFB020]'
                     : isDark
                     ? 'bg-[#17171D] text-zinc-400 border-zinc-800'
                     : 'bg-white text-zinc-700 border-zinc-300'
@@ -420,7 +423,7 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
                 }}
                 className={`p-2 rounded-xl border cursor-pointer transition-all ${
                   settings.soundEnabled
-                    ? 'bg-[#EC4899] text-white border-[#EC4899]'
+                    ? 'bg-[#FFB020] text-[#0F0F14] border-[#FFB020]'
                     : isDark
                     ? 'bg-[#17171D] text-zinc-400 border-zinc-800'
                     : 'bg-white text-zinc-700 border-zinc-300'
@@ -447,7 +450,7 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
                     }}
                     className={`px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition-all ${
                       settings.timerDuration === sec
-                        ? 'bg-[#EC4899] text-white'
+                        ? 'bg-[#FFB020] text-[#0F0F14]'
                         : isDark
                         ? 'text-zinc-400 hover:text-white'
                         : 'text-zinc-600 hover:text-black'
@@ -479,13 +482,13 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
 
             {/* Viewfinder HUD Overlay */}
             <div className="absolute inset-0 pointer-events-none p-4 sm:p-6 flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs font-mono text-white/90 bg-black/45 backdrop-blur-xs px-3.5 py-1.5 rounded-full border border-white/10">
+              <div className="flex items-center justify-between text-xs font-semibold text-white/90 bg-black/45 backdrop-blur-xs px-3.5 py-1.5 rounded-full border border-white/10">
                 <div className="flex items-center space-x-2">
                   <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-ping" />
                   <span className="font-bold">REC • PHOTO + VIDEO FRAME</span>
                 </div>
                 <div className="hidden sm:block">FILTER: {activeFilterObj.name.toUpperCase()}</div>
-                <div className="font-bold text-[#EC4899]">
+                <div className="font-bold text-[#FFB020]">
                   {isCapturing
                     ? `SHOT ${currentSlot + 1} / ${selectedFrame.slots}`
                     : `${selectedFrame.slots} CUTS READY`}
@@ -494,7 +497,7 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
 
               {countdown !== null && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="text-9xl sm:text-[150px] font-display font-black text-white drop-shadow-[0_6px_28px_rgba(0,0,0,0.75)] select-none">
+                  <span className="text-9xl sm:text-[150px] font-extrabold font-black text-white drop-shadow-[0_6px_28px_rgba(0,0,0,0.75)] select-none">
                     {countdown}
                   </span>
                 </div>
@@ -504,7 +507,7 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
                 <div className="absolute inset-0 bg-white animate-flash pointer-events-none" />
               )}
 
-              <div className="flex items-center justify-between text-[11px] font-mono text-white/80 bg-black/45 backdrop-blur-xs px-3.5 py-1 rounded-full border border-white/10">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-white/80 bg-black/45 backdrop-blur-xs px-3.5 py-1 rounded-full border border-white/10">
                 <span>FRAME: {selectedFrame.name}</span>
                 <span>RATIO: {selectedFrame.aspectRatioLabel}</span>
               </div>
@@ -512,7 +515,7 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
 
             {cameraError && (
               <div className="absolute inset-0 bg-[#14141A] p-6 flex flex-col items-center justify-center text-center z-20">
-                <AlertCircle className="w-11 h-11 text-[#EC4899] mb-3" />
+                <AlertCircle className="w-11 h-11 text-[#FFB020] mb-3" />
                 <h3 className="font-extrabold text-lg text-white mb-1">
                   Kamera Tidak Tersedia
                 </h3>
@@ -534,7 +537,7 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
                   </button>
                   <button
                     onClick={handleSimulateCapture}
-                    className="px-5 py-2.5 bg-[#EC4899] hover:bg-[#DB2777] text-white text-xs font-bold rounded-xl flex items-center space-x-2 cursor-pointer shadow-lg"
+                    className="px-5 py-2.5 bg-[#FFB020] hover:bg-[#F28C1B] text-[#0F0F14] text-xs font-bold rounded-xl flex items-center space-x-2 cursor-pointer shadow-lg"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     <span>Gunakan Foto & Video Sample</span>
@@ -584,7 +587,7 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
                     }}
                     className={`shrink-0 px-3 py-2 rounded-xl border text-xs font-bold flex items-center space-x-2 cursor-pointer transition-all ${
                       active
-                        ? 'bg-[#EC4899] text-white border-[#EC4899] shadow-md'
+                        ? 'bg-[#FFB020] text-[#0F0F14] border-[#FFB020] shadow-md'
                         : isDark
                         ? 'bg-[#17171D] border-zinc-800 text-zinc-300 hover:border-zinc-700'
                         : 'bg-white border-zinc-200 text-zinc-700 hover:border-zinc-300'
@@ -619,7 +622,7 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
                       key={idx}
                       className={`w-12 h-10 rounded-lg border overflow-hidden flex items-center justify-center ${
                         isCapturing && currentSlot === idx
-                          ? 'ring-2 ring-[#EC4899] border-[#EC4899]'
+                          ? 'ring-2 ring-[#FFB020] border-[#FFB020]'
                           : isDark
                           ? 'bg-[#111115] border-zinc-700'
                           : 'bg-zinc-100 border-zinc-300'
@@ -656,7 +659,7 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
               <button
                 onClick={startBurstSequence}
                 disabled={!cameraReady || isCapturing}
-                className={`px-8 py-3.5 rounded-xl bg-[#EC4899] hover:bg-[#DB2777] text-white font-bold text-xs uppercase tracking-wider flex items-center space-x-2.5 shadow-lg shadow-[#EC4899]/25 cursor-pointer transition-all ${
+                className={`px-8 py-3.5 rounded-xl bg-[#FFB020] hover:bg-[#F28C1B] text-[#0F0F14] font-bold text-xs uppercase tracking-wider flex items-center space-x-2.5 shadow-lg  cursor-pointer transition-all ${
                   isCapturing ? 'opacity-80 cursor-wait' : ''
                 }`}
               >
@@ -708,10 +711,10 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
                   }}
                   className={`group relative aspect-4/3 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center overflow-hidden cursor-pointer transition-all ${
                     shot
-                      ? 'border-[#EC4899]'
+                      ? 'border-[#FFB020]'
                       : isDark
-                      ? 'bg-[#111115] border-zinc-700 hover:border-[#EC4899]'
-                      : 'bg-zinc-50 border-zinc-300 hover:border-[#EC4899]'
+                      ? 'bg-[#111115] border-zinc-700 hover:border-[#FFB020]'
+                      : 'bg-zinc-50 border-zinc-300 hover:border-[#FFB020]'
                   }`}
                 >
                   {shot ? (
@@ -727,7 +730,7 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
                     </>
                   ) : (
                     <>
-                      <span className="text-2xl font-display font-black text-[#EC4899] mb-1">
+                      <span className="text-2xl font-extrabold font-black text-[#FFB020] mb-1">
                         {idx + 1}
                       </span>
                       <span className="text-[11px] font-bold text-zinc-400">
@@ -761,7 +764,7 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
               }}
               className={`px-7 py-3 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-all ${
                 allSlotsFilled
-                  ? 'bg-[#EC4899] hover:bg-[#DB2777] text-white cursor-pointer shadow-lg'
+                  ? 'bg-[#FFB020] hover:bg-[#F28C1B] text-[#0F0F14] cursor-pointer shadow-lg'
                   : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
               }`}
             >

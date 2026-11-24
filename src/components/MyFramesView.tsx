@@ -1,8 +1,6 @@
-import React, { useState, useRef } from 'react'
+﻿import React, { useState, useRef } from 'react'
 import {
-  Lock,
   Plus,
-  Sparkles,
   Camera,
   Palette,
   Check,
@@ -11,14 +9,12 @@ import {
   Sliders,
   Trash2,
 } from 'lucide-react'
-import type { CustomSlotRect, FrameIllustration, FrameTemplate, User } from '../types'
+import type { CustomSlotRect, FrameIllustration, FrameTemplate } from '../types'
 import { FrameCardPreview } from './FrameCardPreview'
 import { sound } from '../utils/sound'
 
 interface MyFramesViewProps {
-  user: User
   customFrames: FrameTemplate[]
-  onOpenAuth: () => void
   onCreateCustomFrame: (newFrame: FrameTemplate) => void
   onStartWithFrame: (frame: FrameTemplate) => void
   isDark: boolean
@@ -55,9 +51,7 @@ function generateSlotRects(
 }
 
 export const MyFramesView: React.FC<MyFramesViewProps> = ({
-  user,
   customFrames,
-  onOpenAuth,
   onCreateCustomFrame,
   onStartWithFrame,
   isDark,
@@ -67,7 +61,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
   // ==================== TAB 1: UPLOAD USER FRAME STATE ====================
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadName, setUploadName] = useState('')
-  const [uploadTag, setUploadTag] = useState('USER FRAME')
+  const [uploadTag, setUploadTag] = useState('FRAME KUSTOM')
   const [uploadImageUrl, setUploadImageUrl] = useState<string>('')
   const [uploadMode, setUploadMode] = useState<'overlay_png' | 'template_bg'>('overlay_png')
   const [uploadLayout, setUploadLayout] = useState<'1x3' | '1x4' | '2x2' | '2x3' | '4r'>('1x4')
@@ -79,58 +73,14 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
   const [uploadSuccess, setUploadSuccess] = useState(false)
 
   // ==================== TAB 2: DESIGN GENERATOR STATE ====================
-  const [name, setName] = useState('My Denim & Press Edition')
-  const [venue, setVenue] = useState('URBOOTH SPECIAL EDITION')
+  const [name, setName] = useState('Edisi Denim & Koran Saya')
+  const [venue, setVenue] = useState('EDISI SPESIAL URBOOTH')
   const [bgColor, setBgColor] = useState('#1E3A5F')
   const [textColor, setTextColor] = useState('#FEF3C7')
   const [slots, setSlots] = useState<3 | 4 | 6>(4)
   const [slotShape, setSlotShape] = useState<'rect' | 'rounded' | 'oval'>('rect')
   const [illustration, setIllustration] = useState<FrameIllustration>('denim_jeans')
   const [createdSuccess, setCreatedSuccess] = useState(false)
-
-  // LOGIN GATE
-  if (user.role === 'guest') {
-    return (
-      <div className="w-full max-w-3xl mx-auto my-10">
-        <div
-          className={`rounded-3xl p-8 sm:p-12 text-center flex flex-col items-center ${
-            isDark ? 'glass-panel-dark' : 'glass-panel-light'
-          }`}
-        >
-          <div className="w-16 h-16 rounded-2xl bg-[#EC4899]/15 border border-[#EC4899]/30 flex items-center justify-center mb-5">
-            <Lock className="w-8 h-8 text-[#EC4899]" />
-          </div>
-
-          <span className="px-3 py-1 rounded-full bg-[#EC4899]/15 text-[#EC4899] text-[11px] font-extrabold tracking-wider uppercase mb-3">
-            KHUSUS MEMBER URBOOTH
-          </span>
-
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight max-w-md">
-            Login untuk Upload & Melihat Frame Kamu Sendiri
-          </h2>
-
-          <p className="text-xs sm:text-sm max-w-lg mt-3 leading-relaxed opacity-75">
-            Masuk atau daftar gratis untuk <strong>mengupload file frame PNG/JPG buatanmu</strong>{' '}
-            (dari Canva/Photoshop), mengatur posisi slot foto 1–6, dan langsung menggunakannya di
-            studio photobooth!
-          </p>
-
-          <div className="mt-7">
-            <button
-              onClick={() => {
-                sound.playClick()
-                onOpenAuth()
-              }}
-              className="px-7 py-3.5 rounded-2xl bg-gradient-to-r from-[#EC4899] to-indigo-500 text-white font-bold text-xs uppercase tracking-wider flex items-center space-x-2 shadow-lg shadow-pink-500/25 cursor-pointer transition-all"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Masuk / Daftar Sekarang</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   const layoutConfigMap = {
     '1x3': { slots: 3 as const, cols: 1 as const, rows: 3, category: 'strip_1x3' as const, label: '1x3 Strip', ratio: 4 / 3 },
@@ -192,7 +142,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
       aspectRatioLabel: activeUploadCfg.ratio === 1 ? '1:1' : '4:3',
       dimensionsLabel: '2400 × 3600px',
       usageCount: 1,
-      creatorName: user.name,
+      creatorName: 'Kreator Urbooth',
       isLocked: false,
       isActive: true,
       isNew: true,
@@ -205,11 +155,11 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
       slotShape: slotRadius > 0 ? 'rounded' : 'rect',
       bgColor: '#18181B',
       textColor: '#FFFFFF',
-      accentColor: '#EC4899',
+      accentColor: '#FFB020',
       subtleBorderColor: '#3F3F46',
-      tag: uploadTag || 'USER UPLOAD',
-      badgeText: 'MY FRAME',
-      description: `Frame kustom yang diupload oleh ${user.name}.`,
+      tag: uploadTag || 'FRAME KUSTOM',
+      badgeText: 'KUSTOM',
+      description: 'Frame kustom yang diunggah langsung dari perangkat.',
       defaultVenue: uploadName.trim().toUpperCase(),
     }
 
@@ -238,13 +188,13 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
     aspectRatioLabel: '4:3',
     dimensionsLabel: slots === 6 ? '2400 × 3600px' : '1200 × 3600px',
     usageCount: 1,
-    creatorName: user.name,
+    creatorName: 'Kreator Urbooth',
     isLocked: false,
     isActive: true,
     isCustomUserFrame: true,
     bgColor,
     textColor,
-    accentColor: '#EC4899',
+    accentColor: '#FFB020',
     subtleBorderColor: textColor,
     tag: 'MY CUSTOM FRAME',
     description: 'Frame kustom yang dibuat di Urbooth Glass Creator Studio.',
@@ -285,11 +235,11 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 mb-6 border-b border-white/10">
           <div>
-            <span className="text-[11px] font-mono text-[#EC4899] font-bold uppercase tracking-wider">
-              USER FRAME CREATOR • {user.name}
+            <span className="text-xs font-semibold text-[#FFB020] font-bold uppercase tracking-wider">
+              STUDIO KREATOR FRAME
             </span>
             <h1 className="text-2xl font-extrabold mt-0.5">
-              Upload Frame Sendiri atau Desain Baru
+              Unggah Frame Sendiri atau Desain Baru
             </h1>
           </div>
 
@@ -306,7 +256,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
               }}
               className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all ${
                 creatorTab === 'upload'
-                  ? 'bg-[#EC4899] text-white shadow'
+                  ? 'bg-[#FFB020] text-[#0F0F14] shadow'
                   : 'opacity-70 hover:opacity-100'
               }`}
             >
@@ -320,7 +270,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
               }}
               className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition-all ${
                 creatorTab === 'design'
-                  ? 'bg-[#EC4899] text-white shadow'
+                  ? 'bg-[#FFB020] text-[#0F0F14] shadow'
                   : 'opacity-70 hover:opacity-100'
               }`}
             >
@@ -346,13 +296,13 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
               {!uploadImageUrl ? (
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className={`w-full min-h-[420px] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center p-8 text-center cursor-pointer transition-all hover:border-[#EC4899] ${
+                  className={`w-full min-h-[420px] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center p-8 text-center cursor-pointer transition-all hover:border-[#FFB020] ${
                     isDark
                       ? 'bg-slate-950/50 border-white/20'
                       : 'bg-slate-100/80 border-slate-300'
                   }`}
                 >
-                  <div className="w-16 h-16 rounded-2xl bg-[#EC4899]/15 text-[#EC4899] flex items-center justify-center mb-4">
+                  <div className="w-16 h-16 rounded-2xl bg-[#FFB020]/15 text-[#FFB020] flex items-center justify-center mb-4">
                     <Upload className="w-8 h-8" />
                   </div>
                   <h3 className="font-extrabold text-base">
@@ -362,7 +312,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                     Mendukung <strong>PNG Transparan</strong> (overlay Canva / Photoshop) maupun{' '}
                     <strong>JPG / PNG Template</strong> biasa.
                   </p>
-                  <span className="mt-5 px-5 py-2.5 rounded-xl bg-[#EC4899] text-white text-xs font-bold shadow">
+                  <span className="mt-5 px-5 py-2.5 rounded-xl bg-[#FFB020] text-[#0F0F14] text-xs font-bold shadow">
                     Pilih File Gambar
                   </span>
                 </div>
@@ -393,9 +343,9 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                               height: `${slot.h * 100}%`,
                               borderRadius: `${slot.radius || 0}px`,
                             }}
-                            className="absolute border-2 border-dashed border-[#EC4899] bg-[#EC4899]/20 flex items-center justify-center pointer-events-none"
+                            className="absolute border-2 border-dashed border-[#FFB020] bg-[#FFB020]/20 flex items-center justify-center pointer-events-none"
                           >
-                            <span className="px-2 py-0.5 rounded bg-black/70 text-white font-display font-black text-sm">
+                            <span className="px-2 py-0.5 rounded bg-black/70 text-white font-extrabold font-black text-sm">
                               {idx + 1}
                             </span>
                           </div>
@@ -407,7 +357,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="text-xs font-bold text-[#EC4899] hover:underline flex items-center gap-1 cursor-pointer"
+                      className="text-xs font-bold text-[#FFB020] hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       <ImageIcon className="w-3.5 h-3.5" />
                       <span>Ganti Gambar Frame</span>
@@ -441,7 +391,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                     value={uploadName}
                     onChange={(e) => setUploadName(e.target.value)}
                     placeholder="misal: Frame Ultah Bestie 2026"
-                    className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-semibold focus:outline-none focus:border-[#EC4899] ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-semibold focus:outline-none focus:border-[#FFB020] ${
                       isDark
                         ? 'bg-white/5 border-white/15 text-white'
                         : 'bg-white border-slate-300 text-slate-900'
@@ -458,7 +408,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                     value={uploadTag}
                     onChange={(e) => setUploadTag(e.target.value)}
                     placeholder="USER FRAME / EVENT / BAND"
-                    className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-semibold focus:outline-none focus:border-[#EC4899] ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-semibold focus:outline-none focus:border-[#FFB020] ${
                       isDark
                         ? 'bg-white/5 border-white/15 text-white'
                         : 'bg-white border-slate-300 text-slate-900'
@@ -481,7 +431,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                     }}
                     className={`p-3.5 rounded-2xl border text-left cursor-pointer transition-all ${
                       uploadMode === 'overlay_png'
-                        ? 'bg-[#EC4899]/15 border-[#EC4899] ring-1 ring-[#EC4899]'
+                        ? 'bg-[#FFB020]/15 border-[#FFB020] ring-1 ring-[#FFB020]'
                         : isDark
                         ? 'glass-card-dark'
                         : 'glass-card-light'
@@ -502,7 +452,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                     }}
                     className={`p-3.5 rounded-2xl border text-left cursor-pointer transition-all ${
                       uploadMode === 'template_bg'
-                        ? 'bg-[#EC4899]/15 border-[#EC4899] ring-1 ring-[#EC4899]'
+                        ? 'bg-[#FFB020]/15 border-[#FFB020] ring-1 ring-[#FFB020]'
                         : isDark
                         ? 'glass-card-dark'
                         : 'glass-card-light'
@@ -541,7 +491,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                       }}
                       className={`py-2 px-2 rounded-xl border text-[11px] font-bold cursor-pointer transition-all ${
                         uploadLayout === ly.id
-                          ? 'bg-[#EC4899] text-white border-[#EC4899]'
+                          ? 'bg-[#FFB020] text-[#0F0F14] border-[#FFB020]'
                           : isDark
                           ? 'glass-card-dark text-slate-300'
                           : 'glass-card-light text-slate-700'
@@ -560,7 +510,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                     isDark ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'
                   }`}
                 >
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#EC4899]">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-[#FFB020]">
                     <Sliders className="w-3.5 h-3.5" />
                     <span>Atur Posisi Kotak Slot Foto (1–{activeUploadCfg.slots})</span>
                   </div>
@@ -575,7 +525,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                         step={0.01}
                         value={slotMarginX}
                         onChange={(e) => setSlotMarginX(Number(e.target.value))}
-                        className="w-full accent-[#EC4899]"
+                        className="w-full accent-[#FFB020]"
                       />
                     </label>
                     <label className="space-y-1">
@@ -587,7 +537,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                         step={0.01}
                         value={slotMarginTop}
                         onChange={(e) => setSlotMarginTop(Number(e.target.value))}
-                        className="w-full accent-[#EC4899]"
+                        className="w-full accent-[#FFB020]"
                       />
                     </label>
                     <label className="space-y-1">
@@ -599,7 +549,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                         step={0.01}
                         value={slotMarginBottom}
                         onChange={(e) => setSlotMarginBottom(Number(e.target.value))}
-                        className="w-full accent-[#EC4899]"
+                        className="w-full accent-[#FFB020]"
                       />
                     </label>
                     <label className="space-y-1">
@@ -612,7 +562,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                           step={0.005}
                           value={slotGap}
                           onChange={(e) => setSlotGap(Number(e.target.value))}
-                          className="w-1/2 accent-[#EC4899]"
+                          className="w-1/2 accent-[#FFB020]"
                         />
                         <input
                           type="range"
@@ -621,7 +571,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                           step={2}
                           value={slotRadius}
                           onChange={(e) => setSlotRadius(Number(e.target.value))}
-                          className="w-1/2 accent-[#EC4899]"
+                          className="w-1/2 accent-[#FFB020]"
                         />
                       </div>
                     </label>
@@ -661,7 +611,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                   onClick={(e) => handleSaveUploadedFrame(e, true)}
                   className={`py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
                     uploadImageUrl && uploadName.trim()
-                      ? 'bg-gradient-to-r from-[#EC4899] to-indigo-500 text-white shadow-lg shadow-pink-500/25 cursor-pointer'
+                      ? 'bg-[#FFB020] text-[#0F0F14] text-white shadow-lg  cursor-pointer'
                       : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                   }`}
                 >
@@ -690,7 +640,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-semibold focus:outline-none focus:border-[#EC4899] ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-semibold focus:outline-none focus:border-[#FFB020] ${
                       isDark
                         ? 'bg-white/5 border-white/15 text-white'
                         : 'bg-white border-slate-300 text-slate-900'
@@ -706,7 +656,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                     type="text"
                     value={venue}
                     onChange={(e) => setVenue(e.target.value)}
-                    className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-semibold focus:outline-none focus:border-[#EC4899] ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-xs font-semibold focus:outline-none focus:border-[#FFB020] ${
                       isDark
                         ? 'bg-white/5 border-white/15 text-white'
                         : 'bg-white border-slate-300 text-slate-900'
@@ -731,7 +681,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                       }}
                       className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-2 cursor-pointer transition-all ${
                         bgColor === p.bg
-                          ? 'border-[#EC4899] ring-2 ring-[#EC4899]/30'
+                          ? 'border-[#FFB020] ring-2 ring-[#FFB020]/30'
                           : isDark
                           ? 'glass-card-dark text-slate-300'
                           : 'glass-card-light text-slate-700'
@@ -763,7 +713,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                         }}
                         className={`flex-1 py-2 rounded-xl text-xs font-bold border cursor-pointer ${
                           slots === s
-                            ? 'bg-[#EC4899] text-white border-[#EC4899]'
+                            ? 'bg-[#FFB020] text-[#0F0F14] border-[#FFB020]'
                             : isDark
                             ? 'glass-card-dark text-slate-300'
                             : 'glass-card-light text-slate-700'
@@ -796,7 +746,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                         }}
                         className={`flex-1 py-2 rounded-xl text-xs font-bold border cursor-pointer ${
                           slotShape === sh.id
-                            ? 'bg-[#EC4899] text-white border-[#EC4899]'
+                            ? 'bg-[#FFB020] text-[#0F0F14] border-[#FFB020]'
                             : isDark
                             ? 'glass-card-dark text-slate-300'
                             : 'glass-card-light text-slate-700'
@@ -833,7 +783,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                       }}
                       className={`py-2 px-3 rounded-xl text-xs font-bold border text-left cursor-pointer transition-all ${
                         illustration === ill.id
-                          ? 'bg-[#EC4899] text-white border-[#EC4899]'
+                          ? 'bg-[#FFB020] text-[#0F0F14] border-[#FFB020]'
                           : isDark
                           ? 'glass-card-dark text-slate-300'
                           : 'glass-card-light text-slate-700'
@@ -847,7 +797,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
 
               <button
                 type="submit"
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#EC4899] to-indigo-500 text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-lg shadow-pink-500/25 cursor-pointer transition-all"
+                className="w-full py-3.5 rounded-2xl bg-[#FFB020] text-[#0F0F14] text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center space-x-2 shadow-lg  cursor-pointer transition-all"
               >
                 {createdSuccess ? (
                   <>
@@ -884,8 +834,8 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
               key={frame.id}
               className={`group rounded-3xl p-3 flex flex-col justify-between transition-all hover:-translate-y-1 ${
                 isDark
-                  ? 'glass-card-dark hover:border-[#EC4899]'
-                  : 'glass-card-light hover:border-[#EC4899]'
+                  ? 'glass-card-dark hover:border-[#FFB020]'
+                  : 'glass-card-light hover:border-[#FFB020]'
               }`}
             >
               <div
@@ -893,7 +843,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                   isDark ? 'bg-slate-950/60' : 'bg-slate-200/60'
                 }`}
               >
-                <span className="absolute top-2.5 left-2.5 z-10 px-2 py-0.5 rounded-full bg-[#EC4899] text-white text-[9px] font-extrabold">
+                <span className="absolute top-2.5 left-2.5 z-10 px-2 py-0.5 rounded-full bg-[#FFB020] text-[#0F0F14] text-[9px] font-extrabold">
                   MY FRAME
                 </span>
                 <FrameCardPreview frame={frame} className="max-h-full w-auto" />
@@ -910,7 +860,7 @@ export const MyFramesView: React.FC<MyFramesViewProps> = ({
                     sound.playClick()
                     onStartWithFrame(frame)
                   }}
-                  className="mt-2.5 w-full py-2 rounded-xl bg-gradient-to-r from-[#EC4899] to-indigo-500 text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                  className="mt-2.5 w-full py-2 rounded-xl bg-[#FFB020] text-[#0F0F14] text-white text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all"
                 >
                   <Camera className="w-3.5 h-3.5" />
                   <span>Pakai Frame Ini</span>

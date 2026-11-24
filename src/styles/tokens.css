@@ -1,0 +1,33 @@
+/* ==================== URBOOTH DESIGN TOKENS ==================== */
+:root {
+  /* Brand & Surface Colors (Urbooth Logo Palette: Amber-Orange, Black, Cream) */
+  --bg: #0F0F14;
+  --bg-fallback: #1A1A22;
+  --accent: #FFB020;
+  --accent-hover: #F28C1B;
+  --cream: #FFF4E0;
+  --text: #FFFFFF;
+  --text-muted: #B8B8C4;
+
+  /* Glassmorphism Surfaces */
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-bg-hover: rgba(255, 255, 255, 0.10);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --radius: 16px;
+  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.25);
+
+  /* Typography — Single Font Family (Plus Jakarta Sans) */
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+
+  /* Strict Type Scale: 12 / 14 / 16 / 24 / 40 px */
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-base: 16px;
+  --fs-xl: 24px;
+  --fs-hero: 40px;
+
+  /* Strict Font Weights: 400 / 600 / 800 */
+  --fw-regular: 400;
+  --fw-semibold: 600;
+  --fw-extrabold: 800;
+}

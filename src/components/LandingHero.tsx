@@ -13,7 +13,8 @@ import {
   Zap,
   ChevronDown,
 } from 'lucide-react'
-import type { FrameTemplate, ThemeMode, User } from '../types'
+import type { FrameTemplate, ThemeMode } from '../types'
+import { PHOTO_FILTERS } from '../constants/filters'
 import { FrameCardPreview } from './FrameCardPreview'
 import { sound } from '../utils/sound'
 
@@ -22,8 +23,6 @@ interface LandingHeroProps {
   onStart: () => void
   onSelectFrameFromLanding: (frame: FrameTemplate) => void
   onNavigateTab: (tab: 'home' | 'frames' | 'my_frames' | 'gallery') => void
-  onOpenAuth: () => void
-  user: User
   theme: ThemeMode
   onThemeChange: (t: ThemeMode) => void
   isDark: boolean
@@ -34,8 +33,6 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
   onStart,
   onSelectFrameFromLanding,
   onNavigateTab,
-  onOpenAuth,
-  user,
   theme,
   onThemeChange,
   isDark,
@@ -107,57 +104,53 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       className={`relative min-h-screen w-full overflow-y-auto overflow-x-hidden transition-colors duration-300 ${
-        isDark ? 'bg-[#090A10] text-white' : 'bg-[#EEF2F9] text-slate-900'
+        isDark ? 'bg-[#0F0F14] text-white' : 'bg-[#FFF4E0] text-[#0F0F14]'
       }`}
     >
-      {/* Lightweight Static Ambient Gradient (Zero GPU Repaint Lag) */}
-      <div
-        className={`fixed inset-0 pointer-events-none z-0 ${
-          isDark ? 'ambient-bg-dark' : 'ambient-bg-light'
-        }`}
-      />
+      {/* Solid Ambient Orbs Behind Glass Panels (No Gradients!) */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="ambient-orb-accent -top-24 -left-24 w-[380px] h-[380px]" />
+        <div className="ambient-orb-hover top-1/3 -right-24 w-[400px] h-[400px]" />
+        <div className="ambient-orb-accent -bottom-28 left-1/3 w-[360px] h-[360px]" />
+      </div>
 
-      {/* ==================== CLEAN GLASS NAVBAR WITH OFFICIAL URBOOTH LOGO ==================== */}
+      {/* ==================== CLEAN GLASS NAVBAR (LOGO APPEARS ONLY ONCE PER SCREEN) ==================== */}
       <header className="sticky top-0 z-40 w-full max-w-6xl mx-auto px-4 sm:px-6 pt-4">
         <div
-          className={`px-4 sm:px-6 py-3 rounded-2xl flex items-center justify-between ${
+          className={`px-4 sm:px-6 py-3 flex items-center justify-between ${
             isDark ? 'glass-panel-dark' : 'glass-panel-light'
           }`}
         >
-          {/* Official URBOOTH Logo */}
-          <div className="flex items-center space-x-3">
-            <img
-              src="/urbooth-logo.jpg"
-              alt="URBOOTH Logo"
-              className="h-10 w-auto rounded-xl object-contain bg-white px-1.5 py-0.5 shadow-sm"
-            />
+          {/* Official URBOOTH Logo Box */}
+          <div className="logo-box">
+            <img src="/urbooth-logo.jpg" alt="Urbooth" className="h-8 w-auto rounded-md" />
           </div>
 
-          <nav className="hidden md:flex items-center space-x-7 text-xs font-bold tracking-wider uppercase">
+          <nav className="hidden md:flex items-center space-x-7 text-[14px] font-semibold">
             <button
               onClick={() => {
                 sound.playClick()
                 onNavigateTab('frames')
               }}
-              className="hover:text-[#EC4899] transition-colors cursor-pointer"
+              className="hover:text-[#FFB020] transition-colors cursor-pointer"
             >
-              Koleksi Frame
+              Frame
             </button>
             <button
               onClick={() => {
                 sound.playClick()
                 onNavigateTab('my_frames')
               }}
-              className="hover:text-[#EC4899] transition-colors cursor-pointer"
+              className="hover:text-[#FFB020] transition-colors cursor-pointer"
             >
-              Frame Kita
+              Buat Frame
             </button>
             <button
               onClick={() => {
                 sound.playClick()
                 onNavigateTab('gallery')
               }}
-              className="hover:text-[#EC4899] transition-colors cursor-pointer"
+              className="hover:text-[#FFB020] transition-colors cursor-pointer"
             >
               Galeri
             </button>
@@ -165,17 +158,15 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
 
           <div className="flex items-center space-x-2.5">
             <div
-              className={`flex items-center p-1 rounded-xl border ${
-                isDark
-                  ? 'bg-white/5 border-white/10'
-                  : 'bg-slate-900/5 border-slate-900/10'
+              className={`flex items-center p-1 rounded-[16px] border ${
+                isDark ? 'bg-white/6 border-white/12' : 'bg-white border-slate-300'
               }`}
             >
               {(
                 [
-                  { id: 'light', icon: Sun, title: 'Light Mode' },
-                  { id: 'dark', icon: Moon, title: 'Dark Mode' },
-                  { id: 'system', icon: Monitor, title: 'System Mode' },
+                  { id: 'light', icon: Sun, title: 'Mode terang' },
+                  { id: 'dark', icon: Moon, title: 'Mode gelap' },
+                  { id: 'system', icon: Monitor, title: 'Ikuti sistem' },
                 ] as const
               ).map((item) => {
                 const Icon = item.icon
@@ -188,69 +179,58 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                       onThemeChange(item.id)
                     }}
                     title={item.title}
-                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                    className={`p-1.5 rounded-xl transition-all cursor-pointer ${
                       active
-                        ? 'bg-[#EC4899] text-white'
-                        : 'opacity-60 hover:opacity-100'
+                        ? 'bg-[#FFB020] text-[#0F0F14]'
+                        : isDark
+                        ? 'text-[#B8B8C4] hover:text-white'
+                        : 'text-slate-600 hover:text-[#0F0F14]'
                     }`}
                   >
-                    <Icon className="w-3.5 h-3.5" />
+                    <Icon className="w-4 h-4" />
                   </button>
                 )
               })}
             </div>
 
-            {user.role !== 'guest' ? (
-              <button
-                onClick={() => {
-                  sound.playClick()
-                  onStart()
-                }}
-                className="px-4 py-2 rounded-xl bg-[#EC4899] text-white text-xs font-bold uppercase cursor-pointer"
-              >
-                {user.name}
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  sound.playClick()
-                  onOpenAuth()
-                }}
-                className="px-4 py-2 rounded-xl bg-[#EC4899] hover:bg-[#DB2777] text-white text-xs font-bold uppercase cursor-pointer transition-all"
-              >
-                Masuk
-              </button>
-            )}
+            <button
+              onClick={() => {
+                sound.playClick()
+                onStart()
+              }}
+              className={`btn-secondary px-4 py-2 text-[14px] cursor-pointer ${
+                isDark ? '' : '!bg-white !text-[#0F0F14] !border-slate-300'
+              }`}
+            >
+              Mulai Foto
+            </button>
           </div>
         </div>
       </header>
 
-      {/* ==================== SECTION 1: CLEAN HERO + INTERACTIVE 3D CAMERA WITH LIVE SHOOT ANIMATION ==================== */}
+      {/* ==================== SECTION 1: CLEAN HERO + INTERACTIVE 3D CAMERA ==================== */}
       <section className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-16 min-h-[82vh] flex flex-col justify-center">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          {/* Left 6 Cols: Clean Decluttered Typography & Primary CTA */}
+          {/* Left 6 Cols: Single Accent Phrase in Hero Title + Single Primary CTA */}
           <div className="lg:col-span-6 space-y-6">
-            <img
-              src="/urbooth-logo.jpg"
-              alt="URBOOTH Photobooth"
-              className="h-16 sm:h-20 w-auto rounded-2xl bg-white px-3 py-1.5 shadow-xl"
-            />
+            <span className="badge-outline inline-block">
+              {frames.length} FRAME • {PHOTO_FILTERS.length} FILTER
+            </span>
 
-            <h1 className="font-display font-black text-4xl sm:text-5xl tracking-tight leading-[1.08]">
-              Abadikan Momen Seru dalam{' '}
-              <span className="bg-gradient-to-r from-amber-400 via-[#EC4899] to-indigo-400 bg-clip-text text-transparent">
-                Satu Klik.
-              </span>
+            <h1 className="text-hero max-w-[16ch]">
+              Abadikan momen seru dalam{' '}
+              <span className="text-[#FFB020]">satu klik.</span>
             </h1>
 
             <p
-              className={`text-sm sm:text-base leading-relaxed max-w-lg ${
-                isDark ? 'text-slate-300' : 'text-slate-600'
+              className={`text-[16px] leading-[1.6] max-w-lg ${
+                isDark ? 'text-[#B8B8C4]' : 'text-slate-600'
               }`}
             >
-              Photobooth web interaktif dengan <strong>100+ Frame</strong> (Denim Jeans, Koran
-              Harian, iOS Music Player, Viral Meme), <strong>108+ Filter Pro</strong>, stiker meme
-              auto hapus background, <strong>Video Frame</strong>, dan <strong>Timelapse</strong>.
+              Photobooth web interaktif dengan <strong>{frames.length} frame pilihan</strong> (Denim,
+              Koran, Apple Music, Viral Meme), <strong>{PHOTO_FILTERS.length} filter foto</strong>,
+              stiker meme hapus background otomatis, <strong>Video Frame 30 FPS</strong>, dan{' '}
+              <strong>Timelapse</strong>.
             </p>
 
             <div className="flex flex-wrap items-center gap-3.5 pt-2">
@@ -259,10 +239,10 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                   sound.playShutter()
                   onStart()
                 }}
-                className="px-8 py-4 rounded-2xl bg-gradient-to-r from-[#EC4899] to-indigo-500 hover:opacity-95 text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider flex items-center space-x-2.5 shadow-xl shadow-pink-500/25 cursor-pointer transition-all"
+                className="btn-primary px-7 py-4 text-[16px] flex items-center space-x-2.5 cursor-pointer"
               >
-                <Camera className="w-4 h-4" />
-                <span>Mulai Photobooth</span>
+                <Camera className="w-5 h-5" />
+                <span>Mulai Foto</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
@@ -271,14 +251,12 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                   sound.playClick()
                   onNavigateTab('frames')
                 }}
-                className={`px-6 py-4 rounded-2xl font-bold text-xs sm:text-sm uppercase tracking-wider flex items-center space-x-2 cursor-pointer transition-all ${
-                  isDark
-                    ? 'glass-card-dark hover:bg-white/15 text-white'
-                    : 'glass-card-light hover:bg-white text-slate-900'
+                className={`btn-secondary px-6 py-4 text-[14px] flex items-center space-x-2 cursor-pointer ${
+                  isDark ? '' : '!bg-white !text-[#0F0F14] !border-slate-300'
                 }`}
               >
-                <Layers className="w-4 h-4 text-[#EC4899]" />
-                <span>Browse 100+ Frame</span>
+                <Layers className="w-4 h-4 text-[#FFB020]" />
+                <span>Jelajahi {frames.length} frame</span>
               </button>
             </div>
           </div>
@@ -304,7 +282,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                   }`}
                   style={{ transform: 'translateZ(-14px) rotateZ(7deg)' }}
                 >
-                  <div className="text-[7px] font-mono font-bold text-slate-900 text-center">
+                  <div className="text-[7px] font-semibold font-bold text-slate-900 text-center">
                     URBOOTH LIVE
                   </div>
                   {[
@@ -319,7 +297,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                       <img src={src} alt="Live Pose" className="w-full h-full object-cover" />
                     </div>
                   ))}
-                  <div className="text-[7px] font-mono text-slate-500 text-center">
+                  <div className="text-[7px] font-semibold text-slate-500 text-center">
                     SHOT COMPLETE
                   </div>
                 </div>
@@ -328,7 +306,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                 <div
                   onClick={triggerManual3DShutter}
                   title="Klik Shutter 3D!"
-                  className="absolute -top-5 right-10 w-14 h-5 rounded-t-lg bg-gradient-to-r from-amber-400 to-[#EC4899] border border-white/40 shadow-lg cursor-pointer hover:translate-y-0.5 active:translate-y-1 transition-transform"
+                  className="absolute -top-5 right-10 w-14 h-5 rounded-t-lg bg-[#FFB020] border border-white/40 shadow-lg cursor-pointer hover:translate-y-0.5 active:translate-y-1 transition-transform"
                   style={{ transform: 'translateZ(18px)' }}
                 />
 
@@ -348,13 +326,13 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
 
                 {/* Front Glassmorphic Camera Body */}
                 <div
-                  className="absolute inset-0 rounded-3xl bg-gradient-to-br from-slate-800/85 via-slate-900/90 to-zinc-950/95 backdrop-blur-2xl border-2 border-white/25 shadow-[0_25px_70px_rgba(0,0,0,0.5)] p-5 flex flex-col justify-between"
+                  className="absolute inset-0 rounded-3xl bg-[#1A1A22] backdrop-blur-2xl border-2 border-white/25 shadow-[0_25px_70px_rgba(0,0,0,0.5)] p-5 flex flex-col justify-between"
                   style={{ transform: 'translateZ(24px)' }}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-                      <span className="font-mono text-[10px] font-bold text-white/80">
+                      <span className="font-semibold text-[10px] font-bold text-white/80">
                         SHOOTING... {autoShotStep}
                       </span>
                     </div>
@@ -363,7 +341,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-[9px] font-mono text-white/60">
+                  <div className="flex items-center justify-between text-[9px] font-semibold text-white/60">
                     <span>URBOOTH 3D CAM</span>
                     <span>DRAG 360° • CLICK LENS</span>
                   </div>
@@ -378,11 +356,11 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                     transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   }}
                 >
-                  <div className="w-full h-full rounded-full bg-gradient-to-tr from-zinc-900 via-slate-800 to-zinc-700 border-4 border-white/30 shadow-2xl flex items-center justify-center p-2.5">
-                    <div className="w-full h-full rounded-full border-2 border-[#EC4899] flex items-center justify-center p-3">
-                      <div className="relative w-full h-full rounded-full bg-gradient-to-br from-indigo-950 via-slate-950 to-black border border-white/25 flex flex-col items-center justify-center overflow-hidden">
+                  <div className="w-full h-full rounded-full bg-[#FFB020] border-4 border-white/30 shadow-2xl flex items-center justify-center p-2.5">
+                    <div className="w-full h-full rounded-full border-2 border-[#FFB020] flex items-center justify-center p-3">
+                      <div className="relative w-full h-full rounded-full bg-[#FFB020] border border-white/25 flex flex-col items-center justify-center overflow-hidden">
                         <Aperture className="w-6 h-6 text-amber-400 mb-0.5 group-hover:rotate-90 transition-transform duration-500" />
-                        <span className="font-display font-black text-xs tracking-widest text-white">
+                        <span className="font-extrabold font-black text-xs tracking-widest text-white">
                           JEPRET
                         </span>
                       </div>
@@ -397,7 +375,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                 isDark ? 'glass-card-dark text-slate-300' : 'glass-card-light text-slate-700'
               }`}
             >
-              <RotateCw className="w-3.5 h-3.5 text-[#EC4899]" />
+              <RotateCw className="w-3.5 h-3.5 text-[#FFB020]" />
               <span>Geser untuk putar 3D atau klik lensa untuk jepret</span>
             </div>
           </div>
@@ -419,10 +397,10 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
       <section id="explore-frames" className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-16">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
           <div>
-            <span className="text-xs font-mono font-bold text-[#EC4899] uppercase tracking-widest">
+            <span className="text-xs font-semibold font-bold text-[#FFB020] uppercase tracking-widest">
               100+ INTERACTIVE TEMPLATES
             </span>
-            <h2 className="text-2xl sm:text-3xl font-display font-black mt-1">
+            <h2 className="text-2xl sm:text-3xl font-extrabold font-black mt-1">
               Koleksi Frame Terpopuler
             </h2>
           </div>
@@ -431,7 +409,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
               sound.playClick()
               onNavigateTab('frames')
             }}
-            className="text-xs font-bold text-[#EC4899] hover:underline flex items-center gap-1 cursor-pointer"
+            className="text-xs font-bold text-[#FFB020] hover:underline flex items-center gap-1 cursor-pointer"
           >
             <span>Lihat Semua {frames.length} Frame</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -447,7 +425,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                 onSelectFrameFromLanding(f)
               }}
               className={`group rounded-3xl p-3.5 cursor-pointer transition-all hover:-translate-y-1.5 ${
-                isDark ? 'glass-card-dark hover:border-[#EC4899]' : 'glass-card-light hover:border-[#EC4899]'
+                isDark ? 'glass-card-dark hover:border-[#FFB020]' : 'glass-card-light hover:border-[#FFB020]'
               }`}
             >
               <div
@@ -461,7 +439,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                 />
               </div>
               <div className="mt-3 px-1">
-                <span className="text-[10px] font-mono text-[#EC4899] font-bold">{f.tag}</span>
+                <span className="text-[10px] font-semibold text-[#FFB020] font-bold">{f.tag}</span>
                 <h3 className="font-bold text-sm truncate">{f.name}</h3>
               </div>
             </div>
@@ -501,10 +479,10 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <div className="w-10 h-10 rounded-xl bg-[#EC4899]/15 text-[#EC4899] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-[#FFB020]/15 text-[#FFB020] flex items-center justify-center">
                     <Icon className="w-5 h-5" />
                   </div>
-                  <span className="font-mono text-xs font-bold opacity-40">{item.step}</span>
+                  <span className="font-semibold text-xs font-bold opacity-40">{item.step}</span>
                 </div>
                 <h3 className="font-extrabold text-base">{item.title}</h3>
                 <p className="text-xs leading-relaxed opacity-75">{item.desc}</p>

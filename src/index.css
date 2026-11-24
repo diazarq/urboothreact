@@ -1,55 +1,173 @@
 @import "tailwindcss";
+@import "./styles/tokens.css";
 
 @layer base {
+  html,
   body {
-    font-family: 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    letter-spacing: -0.01em;
+    font-family: var(--font-sans);
+    background-color: var(--bg);
+    color: var(--text);
+    font-size: var(--fs-base);
+    font-weight: var(--fw-regular);
+    line-height: 1.6;
   }
 
-  code, kbd, samp, pre, .font-mono {
-    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  code,
+  kbd,
+  samp,
+  pre,
+  button,
+  input,
+  textarea,
+  select {
+    font-family: var(--font-sans);
   }
 }
 
-.font-handflair {
-  font-family: 'Handflair', 'Caveat', cursive;
+/* ==================== TYPOGRAPHY HELPERS ==================== */
+.text-hero {
+  font-size: var(--fs-hero);
+  font-weight: var(--fw-extrabold);
+  line-height: 1.15;
+  text-wrap: balance;
 }
 
-.font-display {
-  font-family: 'Archivo Black', 'Outfit', sans-serif;
+.text-heading {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-extrabold);
+  line-height: 1.25;
 }
 
-/* ==================== GLASSMORPHISM SYSTEM (GPU-OPTIMIZED) ==================== */
-.glass-panel-dark {
-  background: rgba(18, 20, 30, 0.78);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+.text-body {
+  font-size: var(--fs-base);
+  font-weight: var(--fw-regular);
+  line-height: 1.6;
 }
 
-.glass-panel-light {
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+.text-sub {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-regular);
+  line-height: 1.6;
+  color: var(--text-muted);
 }
 
+.text-caption {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  line-height: 1.4;
+}
+
+/* ==================== GLASSMORPHISM (NO GRADIENTS) ==================== */
+.glass-panel-dark,
 .glass-card-dark {
-  background: rgba(28, 31, 46, 0.72);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
 }
 
+.glass-panel-light,
 .glass-card-light {
-  background: rgba(255, 255, 255, 0.74);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.82);
-  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(15, 15, 20, 0.12);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+}
+
+/* Fallback for browsers without backdrop-filter support */
+@supports not ((backdrop-filter: blur(16px)) or (-webkit-backdrop-filter: blur(16px))) {
+  .glass-panel-dark,
+  .glass-card-dark {
+    background: var(--bg-fallback);
+  }
+  .glass-panel-light,
+  .glass-card-light {
+    background: #FFFFFF;
+  }
+}
+
+/* ==================== SOLID BRAND CONTROLS ==================== */
+.btn-primary {
+  background-color: var(--accent);
+  color: var(--bg);
+  font-weight: var(--fw-semibold);
+  border-radius: var(--radius);
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+}
+
+.btn-secondary {
+  background-color: var(--glass-bg);
+  color: var(--text);
+  border: 1px solid var(--glass-border);
+  font-weight: var(--fw-semibold);
+  border-radius: var(--radius);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--glass-bg-hover);
+  border-color: var(--accent);
+}
+
+.logo-box {
+  background-color: var(--cream);
+  border-radius: 12px;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-solid {
+  background-color: var(--accent-hover);
+  color: var(--bg);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius: 9999px;
+  padding: 4px 10px;
+}
+
+.badge-outline {
+  background-color: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-radius: 9999px;
+  padding: 4px 10px;
+}
+
+/* Solid Ambient Orbs Behind Glass Panels (No Gradients!) */
+.ambient-orb-accent {
+  position: absolute;
+  border-radius: 9999px;
+  background-color: var(--accent);
+  filter: blur(90px);
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.ambient-orb-hover {
+  position: absolute;
+  border-radius: 9999px;
+  background-color: var(--accent-hover);
+  filter: blur(90px);
+  opacity: 0.2;
+  pointer-events: none;
 }
 
 /* 3D Camera Perspective Scene */
@@ -71,21 +189,6 @@
   animation: cameraFlash 0.35s ease-out forwards;
 }
 
-/* Static GPU-safe ambient gradient (replaces continuous animated giant blur orbs that caused lag) */
-.ambient-bg-dark {
-  background:
-    radial-gradient(circle at 12% 10%, rgba(251, 191, 36, 0.14) 0%, transparent 42%),
-    radial-gradient(circle at 88% 36%, rgba(236, 72, 153, 0.15) 0%, transparent 45%),
-    radial-gradient(circle at 42% 90%, rgba(99, 102, 241, 0.14) 0%, transparent 45%);
-}
-
-.ambient-bg-light {
-  background:
-    radial-gradient(circle at 12% 10%, rgba(251, 191, 36, 0.16) 0%, transparent 42%),
-    radial-gradient(circle at 88% 36%, rgba(236, 72, 153, 0.12) 0%, transparent 45%),
-    radial-gradient(circle at 42% 90%, rgba(99, 102, 241, 0.12) 0%, transparent 45%);
-}
-
 /* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
@@ -95,9 +198,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.3);
+  background: rgba(184, 184, 196, 0.3);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #EC4899;
+  background: var(--accent);
 }
