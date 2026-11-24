@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react'
+import React, { useState } from 'react'
 import {
   ShieldCheck,
   Layers,
@@ -7,24 +7,24 @@ import {
   Plus,
   Trash2,
   Power,
-  AlertTriangle,
   Search,
-  Calendar,
   Upload,
   Check,
   UserCheck,
   UserX,
   Crown,
+  MessageSquare,
+  Star,
+  RefreshCw,
 } from 'lucide-react'
 import type { FrameTemplate, GlobalFeatureFlags, User } from '../types'
+import type { FeedbackItem } from '../services/feedbackService'
 import { sound } from '../utils/sound'
 
 interface AdminDashboardProps {
   frames: FrameTemplate[]
   onToggleFrameActive: (frameId: string) => void
   onToggleFramePro: (frameId: string) => void
-  onExtendFrameExpiry: (frameId: string) => void
-  onDisableAllExpired: () => void
   onAddFrame: (frame: FrameTemplate) => void
   onDeleteFrame: (frameId: string) => void
   managedUsers: User[]
@@ -32,6 +32,10 @@ interface AdminDashboardProps {
   onToggleUserStatus: (userId: string) => void
   onToggleUserRole: (userId: string) => void
   onDeleteUser: (userId: string) => void
+  feedbacks: FeedbackItem[]
+  onRefreshFeedbacks: () => void
+  onMarkFeedbackRead: (id: string) => void
+  onDeleteFeedback: (id: string) => void
   featureFlags: GlobalFeatureFlags
   onUpdateFeatureFlags: (flags: Partial<GlobalFeatureFlags>) => void
   isDark: boolean
@@ -41,8 +45,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   frames,
   onToggleFrameActive,
   onToggleFramePro,
-  onExtendFrameExpiry,
-  onDisableAllExpired,
   onAddFrame,
   onDeleteFrame,
   managedUsers,
@@ -50,13 +52,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onToggleUserStatus,
   onToggleUserRole,
   onDeleteUser,
+  feedbacks,
+  onRefreshFeedbacks,
+  onMarkFeedbackRead,
+  onDeleteFeedback,
   featureFlags,
   onUpdateFeatureFlags,
   isDark,
 }) => {
-  const [tab, setTab] = useState<'frames' | 'users' | 'settings'>('frames')
+  const [tab, setTab] = useState<'frames' | 'feedback' | 'users' | 'settings'>('frames')
+  const unreadFeedbackCount = feedbacks.filter((f) => !f.isRead).length
   const [frameSearch, setFrameSearch] = useState('')
-  const [frameFilter, setFrameFilter] = useState<'all' | 'active' | 'inactive' | 'expired'>('all')
+  const [frameFilter, setFrameFilter] = useState<'all' | 'active' | 'inactive'>('all')
 
   // Add Frame Form state
   const [showAddFrame, setShowAddFrame] = useState(false)
@@ -64,7 +71,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [newTag, setNewTag] = useState('SPECIAL EVENT')
   const [newSlots, setNewSlots] = useState<3 | 4 | 6>(4)
   const [newBg, setNewBg] = useState('#1E3A5F')
-  const [newExpiry, setNewExpiry] = useState('2027-06-30')
   const [newOverlayUrl, setNewOverlayUrl] = useState<string>('')
 
   // Add User Form state
@@ -72,11 +78,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [newUserEmail, setNewUserEmail] = useState('')
   const [newUserRole, setNewUserRole] = useState<'member' | 'admin'>('member')
 
-  const today = new Date().toISOString().slice(0, 10)
-  const isFrameExpired = (f: FrameTemplate) => Boolean(f.expiresAt && f.expiresAt < today)
-
   const activeCount = frames.filter((f) => f.isActive !== false).length
-  const expiredCount = frames.filter((f) => isFrameExpired(f)).length
+  const inactiveCount = frames.length - activeCount
 
   const visibleFrames = frames.filter((f) => {
     const matchesSearch =
@@ -84,11 +87,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       f.name.toLowerCase().includes(frameSearch.toLowerCase()) ||
       f.code.toLowerCase().includes(frameSearch.toLowerCase())
     const active = f.isActive !== false
-    const expired = isFrameExpired(f)
 
     if (frameFilter === 'active') return matchesSearch && active
     if (frameFilter === 'inactive') return matchesSearch && !active
-    if (frameFilter === 'expired') return matchesSearch && expired
     return matchesSearch
   })
 
@@ -126,7 +127,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       creatorName: 'Admin Urbooth',
       isLocked: false,
       isActive: true,
-      expiresAt: newExpiry,
       customOverlayUrl: newOverlayUrl || undefined,
       bgColor: newBg,
       textColor: '#FFFFFF',
@@ -186,6 +186,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           {(
             [
               { id: 'frames', label: `Kelola Frame (${frames.length})`, icon: Layers },
+              {
+                id: 'feedback',
+                label: `Saran & Kritik (${feedbacks.length})`,
+                icon: MessageSquare,
+              },
               { id: 'users', label: `Kelola User (${managedUsers.length})`, icon: Users },
               { id: 'settings', label: 'Fitur Global', icon: Settings },
             ] as const
@@ -220,8 +225,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {[
           { label: 'Total Template Frame', value: frames.length, color: 'text-sky-400' },
           { label: 'Frame Aktif (ON)', value: activeCount, color: 'text-emerald-400' },
-          { label: 'Frame Expired (Lewat Waktu)', value: expiredCount, color: 'text-amber-400' },
-          { label: 'Total Pengguna Terdaftar', value: managedUsers.length, color: 'text-[#FFB020]' },
+          { label: 'Frame Nonaktif (OFF)', value: inactiveCount, color: 'text-amber-400' },
+          {
+            label: `Saran & Kritik (${unreadFeedbackCount} baru)`,
+            value: feedbacks.length,
+            color: 'text-[#FFB020]',
+          },
         ].map((stat) => (
           <div
             key={stat.label}
@@ -235,7 +244,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         ))}
       </div>
 
-      {/* ==================== TAB 1: KELOLA FRAME (ON/OFF, EXPIRED, ADD) ==================== */}
+      {/* ==================== TAB 1: KELOLA FRAME (ON/OFF, ADD) ==================== */}
       {tab === 'frames' && (
         <div
           className={`rounded-3xl p-6 space-y-5 ${
@@ -249,7 +258,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   { id: 'all', label: 'Semua' },
                   { id: 'active', label: 'Aktif (ON)' },
                   { id: 'inactive', label: 'Nonaktif (OFF)' },
-                  { id: 'expired', label: `Expired (${expiredCount})` },
                 ] as const
               ).map((f) => (
                 <button
@@ -272,19 +280,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
 
             <div className="flex items-center flex-wrap gap-2">
-              {expiredCount > 0 && (
-                <button
-                  onClick={() => {
-                    sound.playClick()
-                    onDisableAllExpired()
-                  }}
-                  className="px-3.5 py-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 hover:bg-amber-500/30 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
-                >
-                  <AlertTriangle className="w-3.5 h-3.5" />
-                  <span>Matikan Semua Expired</span>
-                </button>
-              )}
-
               <button
                 onClick={() => {
                   sound.playClick()
@@ -307,7 +302,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               }`}
             >
               <h3 className="text-sm font-extrabold">Tambah Template Frame Baru</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <input
                   type="text"
                   required
@@ -344,19 +339,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <option value={4}>1x4 Strip (4 Foto)</option>
                   <option value={6}>2x3 Grid (6 Foto)</option>
                 </select>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 opacity-60 shrink-0" />
-                  <input
-                    type="date"
-                    value={newExpiry}
-                    onChange={(e) => setNewExpiry(e.target.value)}
-                    className={`w-full px-3 py-2 rounded-xl border text-xs font-semibold ${
-                      isDark
-                        ? 'bg-white/5 border-white/15 text-white'
-                        : 'bg-white border-slate-300 text-slate-900'
-                    }`}
-                  />
-                </div>
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -412,7 +394,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <tr>
                   <th className="py-3 px-3">Frame & Kode</th>
                   <th className="py-3 px-3">Layout</th>
-                  <th className="py-3 px-3">Masa Berlaku</th>
                   <th className="py-3 px-3">Akses</th>
                   <th className="py-3 px-3">Status (ON/OFF)</th>
                   <th className="py-3 px-3 text-right">Aksi</th>
@@ -421,7 +402,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <tbody className="divide-y divide-white/5">
                 {visibleFrames.slice(0, 50).map((f) => {
                   const active = f.isActive !== false
-                  const expired = isFrameExpired(f)
                   return (
                     <tr key={f.id} className="hover:bg-white/5 transition-colors">
                       <td className="py-3 px-3">
@@ -439,22 +419,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         </div>
                       </td>
                       <td className="py-3 px-3 font-semibold text-[11px]">{f.layoutLabel}</td>
-                      <td className="py-3 px-3">
-                        <div className="flex items-center space-x-2">
-                          <span
-                            className={`font-semibold text-[11px] ${
-                              expired ? 'text-red-400 font-bold' : 'opacity-75'
-                            }`}
-                          >
-                            {f.expiresAt || 'Selamanya'}
-                          </span>
-                          {expired && (
-                            <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 text-[9px] font-extrabold">
-                              EXPIRED
-                            </span>
-                          )}
-                        </div>
-                      </td>
                       <td className="py-3 px-3">
                         <button
                           onClick={() => {
@@ -488,17 +452,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </td>
                       <td className="py-3 px-3 text-right">
                         <div className="flex items-center justify-end space-x-2">
-                          {expired && (
-                            <button
-                              onClick={() => {
-                                sound.playClick()
-                                onExtendFrameExpiry(f.id)
-                              }}
-                              className="px-2 py-1 rounded-lg text-[#FFB020] text-[#FFB020] text-[10px] font-bold text-[#FFB020] cursor-pointer"
-                            >
-                              +30 Hari
-                            </button>
-                          )}
                           <button
                             onClick={() => {
                               sound.playClick()
@@ -517,6 +470,114 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* ==================== TAB 1.5: SARAN & KRITIK PENGUNJUNG ==================== */}
+      {tab === 'feedback' && (
+        <div
+          className={`rounded-3xl p-6 space-y-5 ${
+            isDark ? 'glass-panel-dark' : 'glass-panel-light'
+          }`}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-extrabold">Kotak Masuk Saran & Kritik</h2>
+              <p className="text-xs opacity-70">
+                Pesan yang dikirim pengunjung dari bagian bawah halaman Beranda.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                sound.playClick()
+                onRefreshFeedbacks()
+              }}
+              className={`px-3.5 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 cursor-pointer ${
+                isDark
+                  ? 'bg-white/6 border-white/15 text-white hover:bg-white/10'
+                  : 'bg-white border-slate-300 text-slate-800 hover:bg-slate-50'
+              }`}
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-[#FFB020]" />
+              <span>Muat Ulang</span>
+            </button>
+          </div>
+
+          {feedbacks.length === 0 ? (
+            <div className="py-14 text-center rounded-2xl border border-dashed border-white/15">
+              <MessageSquare className="w-8 h-8 mx-auto text-[#FFB020] opacity-70 mb-2" />
+              <p className="text-sm font-bold">Belum ada saran atau kritik masuk</p>
+              <p className="text-xs opacity-65 mt-1">
+                Pesan dari pengunjung akan langsung tampil di daftar ini.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {feedbacks.map((fb) => (
+                <div
+                  key={fb.id}
+                  className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-start justify-between gap-4 ${
+                    fb.isRead
+                      ? isDark
+                        ? 'bg-white/5 border-white/10 opacity-80'
+                        : 'bg-white border-slate-200 opacity-85'
+                      : isDark
+                      ? 'bg-[#FFB020]/10 border-[#FFB020]/40'
+                      : 'bg-amber-50 border-amber-300'
+                  }`}
+                >
+                  <div className="space-y-1.5 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-bold text-sm">{fb.name}</span>
+                      <span className="badge-outline">{fb.category}</span>
+                      {!fb.isRead && <span className="badge-solid">BARU</span>}
+                      <span className="inline-flex items-center gap-0.5 text-[#FFB020] text-xs font-semibold">
+                        <Star className="w-3.5 h-3.5 fill-current" />
+                        {fb.rating}/5
+                      </span>
+                      <span className="text-[11px] opacity-60">
+                        {new Date(fb.createdAt).toLocaleString('id-ID', {
+                          day: '2-digit',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </div>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{fb.message}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {!fb.isRead && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          sound.playClick()
+                          onMarkFeedbackRead(fb.id)
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Dibaca</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sound.playClick()
+                        onDeleteFeedback(fb.id)
+                      }}
+                      title="Hapus Pesan"
+                      className="p-2 rounded-xl text-red-400 hover:bg-red-500/15 cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

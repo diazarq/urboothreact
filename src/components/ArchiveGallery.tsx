@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react'
+import React, { useState } from 'react'
 import { Archive, Plus, Image as ImageIcon } from 'lucide-react'
 import type { PhotoSession } from '../types'
 import { sound } from '../utils/sound'
@@ -25,7 +25,7 @@ export const ArchiveGallery: React.FC<ArchiveGalleryProps> = ({
         <div>
           <div className="flex items-center space-x-2 text-xs font-semibold text-[#FFB020] mb-1">
             <Archive className="w-3.5 h-3.5" />
-            <span>GALERI LOKAL URBOOTH</span>
+            <span>GALERI PRIBADI PERANGKAT INI</span>
             <span>•</span>
             <span>{photos.length} HASIL FOTO</span>
           </div>
@@ -36,6 +36,10 @@ export const ArchiveGallery: React.FC<ArchiveGalleryProps> = ({
           >
             Galeri & Riwayat Foto Kamu
           </h1>
+          <p className={`text-xs mt-1 ${isDark ? 'text-[#B8B8C4]' : 'text-slate-600'}`}>
+            Semua foto di sini tersimpan pribadi hanya di browser perangkat kamu dan tidak bisa
+            dilihat oleh pengguna lain.
+          </p>
         </div>
 
         <button

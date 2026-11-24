@@ -57,6 +57,257 @@ function drawHeartClipPath(
 }
 
 const imageElementCache = new Map<string, HTMLImageElement>()
+const cutoutTemplateCache = new Map<string, HTMLCanvasElement | null>()
+
+/**
+ * Automatically converts a raster frame template (JPG/PNG with numbered solid slots)
+ * into a pixel-perfect transparent-cutout PNG overlay!
+ *
+ * Pass 1: Samples each slot's placeholder fill color & flood-fills connected placeholder pixels.
+ * Pass 2: Detects any floating island completely enclosed inside the hole (the slot numbers 1, 2, 3...)
+ *         and punches them out too, while keeping ALL overlapping artwork (stars, dragons, vines,
+ *         cat ears, stamp borders, ribbons, text) 100% opaque ON TOP of the user's photo!
+ */
+function getCutoutTemplateCanvas(
+  frameId: string,
+  tplImg: HTMLImageElement,
+  slots: { x: number; y: number; w: number; h: number; rotation?: number }[]
+): HTMLCanvasElement | null {
+  const cacheKey = `${frameId}_${tplImg.naturalWidth}x${tplImg.naturalHeight}`
+  if (cutoutTemplateCache.has(cacheKey)) {
+    return cutoutTemplateCache.get(cacheKey)!
+  }
+
+  const w = tplImg.naturalWidth || tplImg.width
+  const h = tplImg.naturalHeight || tplImg.height
+  if (!w || !h) return null
+
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  if (!ctx) return null
+
+  ctx.drawImage(tplImg, 0, 0, w, h)
+  let imgData: ImageData
+  try {
+    imgData = ctx.getImageData(0, 0, w, h)
+  } catch {
+    cutoutTemplateCache.set(cacheKey, null)
+    return null
+  }
+
+  const data = imgData.data
+  const totalPixels = w * h
+  // 0 = opaque artwork, 1 = transparent hole
+  const holeMask = new Uint8Array(totalPixels)
+  let totalCutoutSuccess = 0
+
+  const sampleOffsets: [number, number][] = [
+    [0.2, 0.2],
+    [0.8, 0.2],
+    [0.2, 0.8],
+    [0.8, 0.8],
+    [0.5, 0.16],
+    [0.5, 0.84],
+    [0.16, 0.5],
+    [0.84, 0.5],
+    [0.32, 0.32],
+    [0.68, 0.68],
+  ]
+
+  for (const slot of slots) {
+    const sx = Math.round(slot.x * w)
+    const sy = Math.round(slot.y * h)
+    const sw = Math.max(8, Math.round(slot.w * w))
+    const sh = Math.max(8, Math.round(slot.h * h))
+
+    // Generous padded region so irregular ears/hexagons/hearts around the slot are captured
+    const padX = Math.round(sw * 0.16)
+    const padY = Math.round(sh * 0.16)
+    const minX = Math.max(0, sx - padX)
+    const minY = Math.max(0, sy - padY)
+    const maxX = Math.min(w - 1, sx + sw + padX)
+    const maxY = Math.min(h - 1, sy + sh + padY)
+    const boxW = maxX - minX + 1
+    const boxH = maxY - minY + 1
+
+    // Collect interior samples avoiding the centered number
+    const samples: [number, number, number][] = []
+    for (const [ox, oy] of sampleOffsets) {
+      const px = Math.min(w - 1, Math.max(0, Math.round(sx + sw * ox)))
+      const py = Math.min(h - 1, Math.max(0, Math.round(sy + sh * oy)))
+      const idx = (py * w + px) * 4
+      samples.push([data[idx], data[idx + 1], data[idx + 2]])
+    }
+
+    // Find the most representative (cluster-center) color among the samples
+    let bestSample = samples[0]
+    let bestScore = -1
+    for (let i = 0; i < samples.length; i++) {
+      let closeCount = 0
+      for (let j = 0; j < samples.length; j++) {
+        const dr = samples[i][0] - samples[j][0]
+        const dg = samples[i][1] - samples[j][1]
+        const db = samples[i][2] - samples[j][2]
+        if (dr * dr + dg * dg + db * db < 32 * 32) closeCount++
+      }
+      if (closeCount > bestScore) {
+        bestScore = closeCount
+        bestSample = samples[i]
+      }
+    }
+
+    // If fewer than 4 interior samples agree on a fill color (e.g. scenic landscape placeholder), skip cutout
+    if (bestScore < 4) continue
+
+    const [tr, tg, tb] = bestSample
+    const tolSq = 44 * 44
+    const localHole = new Uint8Array(boxW * boxH)
+    const queue = new Int32Array(boxW * boxH)
+    let qHead = 0
+    let qTail = 0
+
+    // Seed BFS from all matching interior sample points
+    for (const [ox, oy] of sampleOffsets) {
+      const px = Math.min(maxX, Math.max(minX, Math.round(sx + sw * ox)))
+      const py = Math.min(maxY, Math.max(minY, Math.round(sy + sh * oy)))
+      const idx = (py * w + px) * 4
+      const dr = data[idx] - tr
+      const dg = data[idx + 1] - tg
+      const db = data[idx + 2] - tb
+      if (dr * dr + dg * dg + db * db <= tolSq) {
+        const lIdx = (py - minY) * boxW + (px - minX)
+        if (!localHole[lIdx]) {
+          localHole[lIdx] = 1
+          queue[qTail++] = lIdx
+        }
+      }
+    }
+
+    // Pass 1: Flood-fill connected slot interior pixels
+    while (qHead < qTail) {
+      const curr = queue[qHead++]
+      const lx = curr % boxW
+      const ly = (curr - lx) / boxW
+
+      const neighbors = [
+        lx > 0 ? curr - 1 : -1,
+        lx + 1 < boxW ? curr + 1 : -1,
+        ly > 0 ? curr - boxW : -1,
+        ly + 1 < boxH ? curr + boxW : -1,
+      ]
+
+      for (let n = 0; n < 4; n++) {
+        const next = neighbors[n]
+        if (next < 0 || localHole[next]) continue
+        const nx = minX + (next % boxW)
+        const ny = minY + Math.floor(next / boxW)
+        const idx = (ny * w + nx) * 4
+        const dr = data[idx] - tr
+        const dg = data[idx + 1] - tg
+        const db = data[idx + 2] - tb
+        if (dr * dr + dg * dg + db * db <= tolSq) {
+          localHole[next] = 1
+          queue[qTail++] = next
+        }
+      }
+    }
+
+    // Sanity check: did we find a real slot hole (at least 30% of slot area)?
+    if (qTail < sw * sh * 0.3) continue
+
+    // Pass 2: Flood-fill from the OUTER perimeter of the padded box across non-hole pixels
+    // Anything NOT reachable from outside is an enclosed island (i.e. the slot number 1, 2, 3...) -> punch it out!
+    const outsideReachable = new Uint8Array(boxW * boxH)
+    let oHead = 0
+    let oTail = 0
+
+    const pushOutside = (lx: number, ly: number) => {
+      const lIdx = ly * boxW + lx
+      if (!localHole[lIdx] && !outsideReachable[lIdx]) {
+        outsideReachable[lIdx] = 1
+        queue[oTail++] = lIdx
+      }
+    }
+
+    for (let lx = 0; lx < boxW; lx++) {
+      pushOutside(lx, 0)
+      pushOutside(lx, boxH - 1)
+    }
+    for (let ly = 0; ly < boxH; ly++) {
+      pushOutside(0, ly)
+      pushOutside(boxW - 1, ly)
+    }
+
+    while (oHead < oTail) {
+      const curr = queue[oHead++]
+      const lx = curr % boxW
+      const ly = (curr - lx) / boxW
+
+      if (lx > 0 && !localHole[curr - 1] && !outsideReachable[curr - 1]) {
+        outsideReachable[curr - 1] = 1
+        queue[oTail++] = curr - 1
+      }
+      if (lx + 1 < boxW && !localHole[curr + 1] && !outsideReachable[curr + 1]) {
+        outsideReachable[curr + 1] = 1
+        queue[oTail++] = curr + 1
+      }
+      if (ly > 0 && !localHole[curr - boxW] && !outsideReachable[curr - boxW]) {
+        outsideReachable[curr - boxW] = 1
+        queue[oTail++] = curr - boxW
+      }
+      if (ly + 1 < boxH && !localHole[curr + boxW] && !outsideReachable[curr + boxW]) {
+        outsideReachable[curr + boxW] = 1
+        queue[oTail++] = curr + boxW
+      }
+    }
+
+    // Write final slot hole (both placeholder fill AND enclosed number islands) into global holeMask
+    for (let ly = 0; ly < boxH; ly++) {
+      const rowOff = (minY + ly) * w + minX
+      const lRowOff = ly * boxW
+      for (let lx = 0; lx < boxW; lx++) {
+        const lIdx = lRowOff + lx
+        if (localHole[lIdx] || !outsideReachable[lIdx]) {
+          holeMask[rowOff + lx] = 1
+        }
+      }
+    }
+
+    totalCutoutSuccess++
+  }
+
+  if (totalCutoutSuccess === 0) {
+    cutoutTemplateCache.set(cacheKey, null)
+    return null
+  }
+
+  // Apply alpha = 0 to holes + subtle 1px anti-alias softening on edge pixels
+  for (let i = 0; i < totalPixels; i++) {
+    if (holeMask[i]) {
+      data[i * 4 + 3] = 0
+    }
+  }
+
+  // Soften 1px fringe directly touching the hole for crisp anti-aliased edges
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x
+      if (!holeMask[i]) {
+        const holeNeighbors =
+          holeMask[i - 1] + holeMask[i + 1] + holeMask[i - w] + holeMask[i + w]
+        if (holeNeighbors >= 2) {
+          data[i * 4 + 3] = holeNeighbors >= 3 ? 110 : 185
+        }
+      }
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0)
+  cutoutTemplateCache.set(cacheKey, canvas)
+  return canvas
+}
 
 export function loadImage(src: string): Promise<HTMLImageElement> {
   if (imageElementCache.has(src)) {
@@ -973,13 +1224,6 @@ export function drawCompositeOnCanvas(
     ctx.save()
     ctx.scale(scale, scale)
 
-    if (tplImg) {
-      ctx.drawImage(tplImg, 0, 0, baseW, baseH)
-    } else {
-      ctx.fillStyle = frame.bgColor
-      ctx.fillRect(0, 0, baseW, baseH)
-    }
-
     const currentFilter = PHOTO_FILTERS.find((f) => f.id === filterId) || PHOTO_FILTERS[0]
     const videoCss = getVideoFilterCss(videoFilter)
     const activeCssFilter =
@@ -989,17 +1233,36 @@ export function drawCompositeOnCanvas(
         ? currentFilter.cssFilter
         : 'none'
 
+    // Generate/fetch pixel-perfect transparent-cutout overlay so photos sit BEHIND stars/dragons/vines/borders!
+    const cutoutCanvas = tplImg
+      ? getCutoutTemplateCanvas(frame.id, tplImg, frame.customSlots)
+      : null
+
+    if (cutoutCanvas) {
+      // Clear background with frame bgColor, draw user photos BEHIND the cutout, then stamp cutout ON TOP!
+      ctx.fillStyle = frame.bgColor
+      ctx.fillRect(0, 0, baseW, baseH)
+    } else if (tplImg) {
+      ctx.drawImage(tplImg, 0, 0, baseW, baseH)
+    } else {
+      ctx.fillStyle = frame.bgColor
+      ctx.fillRect(0, 0, baseW, baseH)
+    }
+
     frame.customSlots.forEach((slot, i) => {
       const img = loadedImages[i]
       if (!img) return
 
-      const sx = slot.x * baseW
-      const sy = slot.y * baseH
-      const sw = slot.w * baseW
-      const sh = slot.h * baseH
-      const r = slot.radius || 0
+      // When using pixel-perfect cutout overlay, bleed photo slightly (+8%) so irregular ears/hex/stars have zero gaps
+      const bleedX = cutoutCanvas ? slot.w * 0.08 : 0
+      const bleedY = cutoutCanvas ? slot.h * 0.08 : 0
+      const sx = (slot.x - bleedX) * baseW
+      const sy = (slot.y - bleedY) * baseH
+      const sw = (slot.w + bleedX * 2) * baseW
+      const sh = (slot.h + bleedY * 2) * baseH
+      const r = cutoutCanvas ? 0 : slot.radius || 0
       const rot = slot.rotation || 0
-      const slotShape = slot.shape || (r > 0 ? 'rounded' : 'rect')
+      const slotShape = cutoutCanvas ? 'rect' : slot.shape || (r > 0 ? 'rounded' : 'rect')
       const zoom = zoomPerSlot?.[i] || 1
 
       const clipSlotLocal = (targetCtx: CanvasRenderingContext2D, lx: number, ly: number) => {
@@ -1069,6 +1332,11 @@ export function drawCompositeOnCanvas(
         ctx.restore()
       }
     })
+
+    // Stamp pixel-perfect transparent-cutout frame artwork ON TOP of the user's photos!
+    if (cutoutCanvas) {
+      ctx.drawImage(cutoutCanvas, 0, 0, baseW, baseH)
+    }
 
     // Draw Placed Cutout Meme Stickers on top of exact image template
     if (showStickers && placedStickers.length > 0) {

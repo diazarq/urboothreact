@@ -36,6 +36,20 @@ import type {
 import { DEFAULT_FRAME, FRAME_TEMPLATES } from './constants/frames'
 import { storage } from './utils/storage'
 import { sound } from './utils/sound'
+import {
+  deleteCloudFrame,
+  fetchSyncedFrames,
+  isSupabaseConfigured,
+  upsertCloudFrame,
+} from './services/supabaseFrames'
+import {
+  deleteFeedback,
+  fetchFeedbacks,
+  markFeedbackRead,
+  submitFeedback,
+  type FeedbackCategory,
+  type FeedbackItem,
+} from './services/feedbackService'
 
 type DashboardTab = 'home' | 'frames' | 'my_frames' | 'studio' | 'gallery'
 
@@ -101,8 +115,48 @@ export function App() {
 
   const isDark = theme === 'dark' || (theme === 'system' && systemDark)
 
-  // Stateful Frames Catalog (22 curated uploaded frames + supports Admin ON/OFF, Expiry, Add, Delete & User Custom Frames)
+  // Stateful Frames Catalog (37 curated frames + synced with Supabase Cloud when configured!)
   const [framesCatalog, setFramesCatalog] = useState<FrameTemplate[]>(FRAME_TEMPLATES)
+  const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([])
+  const [cloudSyncNotice, setCloudSyncNotice] = useState<string>('')
+  const supabaseReady = isSupabaseConfigured()
+
+  const loadFeedbacks = useCallback(() => {
+    fetchFeedbacks().then((list) => setFeedbacks(list))
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    fetchSyncedFrames(FRAME_TEMPLATES).then((synced) => {
+      if (active) setFramesCatalog(synced)
+    })
+    fetchFeedbacks().then((list) => {
+      if (active) setFeedbacks(list)
+    })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const handleSubmitFeedback = async (input: {
+    name: string
+    category: FeedbackCategory
+    message: string
+    rating: number
+  }) => {
+    const saved = await submitFeedback(input)
+    setFeedbacks((prev) => [saved, ...prev])
+  }
+
+  const handleMarkFeedbackRead = (id: string) => {
+    setFeedbacks((prev) => prev.map((f) => (f.id === id ? { ...f, isRead: true } : f)))
+    void markFeedbackRead(id)
+  }
+
+  const handleDeleteFeedback = (id: string) => {
+    setFeedbacks((prev) => prev.filter((f) => f.id !== id))
+    void deleteFeedback(id)
+  }
   const [customFrames, setCustomFrames] = useState<FrameTemplate[]>(() => {
     try {
       const saved = localStorage.getItem('urbooth_custom_frames_v4')
@@ -185,37 +239,55 @@ export function App() {
     setSelectedFrame(newFrame)
   }
 
-  // Admin Frame Actions
+  const syncFrameToCloud = (frame: FrameTemplate) => {
+    if (!supabaseReady) return
+    setCloudSyncNotice('Menyinkronkan ke Supabase...')
+    upsertCloudFrame(frame)
+      .then((saved) => {
+        setFramesCatalog((prev) => prev.map((f) => (f.id === saved.id ? saved : f)))
+        setCloudSyncNotice('Tersinkron ke semua pengguna')
+        window.setTimeout(() => setCloudSyncNotice(''), 2500)
+      })
+      .catch((err) => {
+        console.error('Supabase sync error:', err)
+        setCloudSyncNotice('Gagal sinkron ke Supabase')
+      })
+  }
+
+  // Admin Frame Actions (optimistic UI + live sync to Supabase Cloud!)
+  const handleAddAdminFrame = (frame: FrameTemplate) => {
+    setFramesCatalog((prev) => [frame, ...prev])
+    syncFrameToCloud(frame)
+  }
+
   const handleToggleFrameActive = (frameId: string) => {
     setFramesCatalog((prev) =>
-      prev.map((f) => (f.id === frameId ? { ...f, isActive: f.isActive === false } : f))
+      prev.map((f) => {
+        if (f.id !== frameId) return f
+        const updated = { ...f, isActive: f.isActive === false }
+        syncFrameToCloud(updated)
+        return updated
+      })
     )
   }
 
   const handleToggleFramePro = (frameId: string) => {
     setFramesCatalog((prev) =>
-      prev.map((f) => (f.id === frameId ? { ...f, isLocked: !f.isLocked } : f))
-    )
-  }
-
-  const handleExtendFrameExpiry = (frameId: string) => {
-    const nextDate = new Date()
-    nextDate.setDate(nextDate.getDate() + 30)
-    const iso = nextDate.toISOString().slice(0, 10)
-    setFramesCatalog((prev) =>
-      prev.map((f) => (f.id === frameId ? { ...f, expiresAt: iso, isActive: true } : f))
-    )
-  }
-
-  const handleDisableAllExpired = () => {
-    const today = new Date().toISOString().slice(0, 10)
-    setFramesCatalog((prev) =>
-      prev.map((f) => (f.expiresAt && f.expiresAt < today ? { ...f, isActive: false } : f))
+      prev.map((f) => {
+        if (f.id !== frameId) return f
+        const updated = { ...f, isLocked: !f.isLocked }
+        syncFrameToCloud(updated)
+        return updated
+      })
     )
   }
 
   const handleDeleteFrame = (frameId: string) => {
+    const target = framesCatalog.find((f) => f.id === frameId)
     setFramesCatalog((prev) => prev.filter((f) => f.id !== frameId))
+    if (target && supabaseReady) {
+      deleteCloudFrame(target).catch((err) => console.error('Supabase delete error:', err))
+    }
   }
 
   // Admin User Actions
@@ -365,6 +437,18 @@ export function App() {
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Panel Admin</span>
             </span>
+            <span
+              className={`hidden md:inline-flex items-center px-3 py-1 rounded-full text-[12px] font-semibold border ${
+                supabaseReady
+                  ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10'
+                  : 'border-[#FFB020]/40 text-[#FFB020] bg-[#FFB020]/10'
+              }`}
+            >
+              {cloudSyncNotice ||
+                (supabaseReady
+                  ? 'Supabase Cloud aktif'
+                  : 'Mode lokal (isi .env Supabase untuk sinkron global)')}
+            </span>
           </div>
 
           <div className="flex items-center gap-2.5">
@@ -399,15 +483,17 @@ export function App() {
             frames={framesCatalog}
             onToggleFrameActive={handleToggleFrameActive}
             onToggleFramePro={handleToggleFramePro}
-            onExtendFrameExpiry={handleExtendFrameExpiry}
-            onDisableAllExpired={handleDisableAllExpired}
-            onAddFrame={(f) => setFramesCatalog((prev) => [f, ...prev])}
+            onAddFrame={handleAddAdminFrame}
             onDeleteFrame={handleDeleteFrame}
             managedUsers={managedUsers}
             onAddUser={handleAddUser}
             onToggleUserStatus={handleToggleUserStatus}
             onToggleUserRole={handleToggleUserRole}
             onDeleteUser={handleDeleteUser}
+            feedbacks={feedbacks}
+            onRefreshFeedbacks={loadFeedbacks}
+            onMarkFeedbackRead={handleMarkFeedbackRead}
+            onDeleteFeedback={handleDeleteFeedback}
             featureFlags={featureFlags}
             onUpdateFeatureFlags={(partial) =>
               setFeatureFlags((prev) => ({ ...prev, ...partial }))
@@ -647,6 +733,7 @@ export function App() {
                 setActiveTab('frames')
               }}
               onOpenDonate={() => setDonateModalOpen(true)}
+              onSubmitFeedback={handleSubmitFeedback}
             />
           )}
 

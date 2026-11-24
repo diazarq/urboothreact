@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ShieldCheck, Lock, Mail, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react'
+import { ShieldCheck, Lock, User, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react'
 import { sound } from '../utils/sound'
 
 interface AdminLoginPageProps {
@@ -13,7 +13,7 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
   onLoginSuccess,
   onBackToSite,
 }) => {
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 
@@ -21,12 +21,12 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
     e.preventDefault()
     sound.playClick()
 
-    const normalizedEmail = email.trim().toLowerCase()
-    if (normalizedEmail === 'admin@urbooth.id' && password === 'admin123') {
+    const normalizedUser = username.trim().toLowerCase()
+    if (normalizedUser === 'admindiaz' && password === 'anjaymabar') {
       setError('')
       onLoginSuccess()
     } else {
-      setError('Email atau kata sandi admin tidak valid.')
+      setError('Username atau kata sandi admin tidak valid.')
     }
   }
 
@@ -72,24 +72,25 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
             <label
-              className={`block text-xs font-bold mb-1.5 ${
+              className={`block text-[12px] font-semibold mb-1.5 ${
                 isDark ? 'text-slate-200' : 'text-slate-700'
               }`}
             >
-              Email Admin
+              Username Admin
             </label>
             <div className="relative">
-              <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#B8B8C4]" />
               <input
-                type="email"
+                type="text"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@urbooth.id"
-                className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm font-medium focus:outline-none focus:border-amber-500 ${
+                autoComplete="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Masukkan username admin"
+                className={`w-full pl-10 pr-4 py-3 rounded-[16px] border text-[14px] font-normal focus:outline-none focus:border-[#FFB020] ${
                   isDark
-                    ? 'bg-slate-950/60 border-white/15 text-white placeholder-slate-500'
-                    : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'
+                    ? 'bg-white/6 border-white/12 text-white placeholder-[#B8B8C4]'
+                    : 'bg-white border-slate-300 text-[#0F0F14] placeholder-slate-400'
                 }`}
               />
             </div>
@@ -97,24 +98,25 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
 
           <div>
             <label
-              className={`block text-xs font-bold mb-1.5 ${
+              className={`block text-[12px] font-semibold mb-1.5 ${
                 isDark ? 'text-slate-200' : 'text-slate-700'
               }`}
             >
               Kata Sandi
             </label>
             <div className="relative">
-              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#B8B8C4]" />
               <input
                 type="password"
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm font-medium focus:outline-none focus:border-amber-500 ${
+                className={`w-full pl-10 pr-4 py-3 rounded-[16px] border text-[14px] font-normal focus:outline-none focus:border-[#FFB020] ${
                   isDark
-                    ? 'bg-slate-950/60 border-white/15 text-white placeholder-slate-500'
-                    : 'bg-white border-slate-300 text-slate-900 placeholder-slate-400'
+                    ? 'bg-white/6 border-white/12 text-white placeholder-[#B8B8C4]'
+                    : 'bg-white border-slate-300 text-[#0F0F14] placeholder-slate-400'
                 }`}
               />
             </div>
@@ -128,18 +130,6 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
-
-        <div
-          className={`mt-5 p-3.5 rounded-xl border text-xs leading-relaxed ${
-            isDark
-              ? 'bg-white/5 border-white/10 text-slate-300'
-              : 'bg-slate-100 border-slate-200 text-slate-600'
-          }`}
-        >
-          <span className="font-semibold text-[#FFB020]">Kredensial lokal:</span>{' '}
-          <code className="font-semibold">admin@urbooth.id</code> /{' '}
-          <code className="font-semibold">admin123</code>
-        </div>
 
         <button
           type="button"

@@ -144,11 +144,13 @@ export async function uploadSharedResult(params: {
 
     const photoPath = `results/${id}.jpg`
     const photoEndpoint = `${cfg.url}/storage/v1/object/${cfg.bucket}/${photoPath}`
-    const baseHeaders = {
+    const baseHeaders: Record<string, string> = {
       apikey: cfg.anonKey,
-      Authorization: `Bearer ${cfg.anonKey}`,
       'x-upsert': 'true',
       'cache-control': '86400',
+    }
+    if (!cfg.anonKey.startsWith('sb_publishable_')) {
+      baseHeaders.Authorization = `Bearer ${cfg.anonKey}`
     }
 
     await uploadViaXhr(
@@ -194,9 +196,14 @@ export async function uploadSharedResult(params: {
       signal
     )
 
+    // Jika sedang di localhost/127.0.0.1 tanpa VITE_PUBLIC_APP_URL, arahkan QR langsung ke URL publik Supabase
+    // supaya HP bisa langsung scan & unduh saat tes lokal! Saat sudah di-hosting (domain publik), otomatis pakai /d/:id.
+    const isLocalhostUrl = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(cfg.publicBaseUrl)
+    const shareUrl = isLocalhostUrl ? photoPublicUrl : `${cfg.publicBaseUrl}/d/${id}`
+
     return {
       id,
-      shareUrl: `${cfg.publicBaseUrl}/d/${id}`,
+      shareUrl,
       expiresAt,
       manifest,
       isLocalFallback: false,

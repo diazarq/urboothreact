@@ -1428,17 +1428,17 @@ export const PhotoReview: React.FC<PhotoReviewProps> = ({
                     {isSaved ? (
                       <>
                         <Check className="w-4 h-4" />
-                        <span>Tersimpan di Galeri!</span>
+                        <span>Tersimpan di Riwayat Perangkat Ini!</span>
                       </>
                     ) : user.role !== 'guest' ? (
                       <>
                         <Archive className="w-4 h-4" />
-                        <span>Simpan ke Galeri Lokal</span>
+                        <span>Simpan ke Riwayat Foto (Khusus Perangkat Ini)</span>
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-4 h-4" />
-                        <span>Simpan ke Galeri</span>
+                        <span>Simpan ke Riwayat Perangkat Ini</span>
                       </>
                     )}
                   </button>

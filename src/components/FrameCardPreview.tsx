@@ -20,7 +20,7 @@ interface FrameCardPreviewProps {
 }
 
 export const FrameCardPreview: React.FC<FrameCardPreviewProps> = ({ frame, className = '' }) => {
-  const cacheKey = `sample_v2_${frame.id}_${frame.bgColor}_${frame.defaultVenue}`
+  const cacheKey = `sample_v3_cutout_${frame.id}_${frame.bgColor}_${frame.defaultVenue}`
   const [previewUrl, setPreviewUrl] = useState<string>(
     previewCache.get(cacheKey) || frame.imageTemplateUrl || ''
   )

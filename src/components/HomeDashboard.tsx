@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   ArrowRight,
   Users,
@@ -10,11 +10,16 @@ import {
   Layers,
   Heart,
   QrCode,
+  MessageSquare,
+  Send,
+  Star,
+  Check,
 } from 'lucide-react'
 import type { FrameTemplate } from '../types'
 import { PHOTO_FILTERS } from '../constants/filters'
 import { FrameCardPreview } from './FrameCardPreview'
 import { sound } from '../utils/sound'
+import type { FeedbackCategory } from '../services/feedbackService'
 
 interface HomeDashboardProps {
   frames: FrameTemplate[]
@@ -24,6 +29,12 @@ interface HomeDashboardProps {
   onNavigateTab: (tab: 'frames' | 'my_frames' | 'studio' | 'gallery') => void
   onSelectFrameDetail: (frame: FrameTemplate) => void
   onOpenDonate: () => void
+  onSubmitFeedback: (input: {
+    name: string
+    category: FeedbackCategory
+    message: string
+    rating: number
+  }) => Promise<void>
 }
 
 export const HomeDashboard: React.FC<HomeDashboardProps> = ({
@@ -34,7 +45,36 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   onNavigateTab,
   onSelectFrameDetail,
   onOpenDonate,
+  onSubmitFeedback,
 }) => {
+  const [fbName, setFbName] = useState('')
+  const [fbCategory, setFbCategory] = useState<FeedbackCategory>('Saran')
+  const [fbRating, setFbRating] = useState(5)
+  const [fbMessage, setFbMessage] = useState('')
+  const [fbSubmitting, setFbSubmitting] = useState(false)
+  const [fbSent, setFbSent] = useState(false)
+
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!fbMessage.trim() || fbSubmitting) return
+    sound.playClick()
+    setFbSubmitting(true)
+    try {
+      await onSubmitFeedback({
+        name: fbName,
+        category: fbCategory,
+        message: fbMessage,
+        rating: fbRating,
+      })
+      setFbName('')
+      setFbMessage('')
+      setFbRating(5)
+      setFbSent(true)
+      window.setTimeout(() => setFbSent(false), 3500)
+    } finally {
+      setFbSubmitting(false)
+    }
+  }
   const musicFrame = frames.find((f) => f.id === 'ios_music_player_1x3') || frames[0]
   const denimFrame = frames.find((f) => f.themeType === 'denim_street') || frames[1] || frames[0]
   const koranFrame = frames.find((f) => f.themeType === 'newspaper') || frames[2] || frames[0]
@@ -416,6 +456,144 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             Scan QRIS • Saweria
           </span>
         </button>
+      </section>
+
+      {/* ==================== KOTAK SARAN & KRITIK (PALING BAWAH) ==================== */}
+      <section
+        className={`p-6 sm:p-8 space-y-5 ${
+          isDark ? 'glass-panel-dark' : 'glass-panel-light'
+        }`}
+      >
+        <div className="space-y-2 max-w-2xl">
+          <span className="badge-outline inline-flex items-center gap-1.5">
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>SARAN & KRITIK</span>
+          </span>
+          <h2 className="text-heading">Bantu Urbooth jadi makin baik</h2>
+          <p className={`text-[14px] leading-[1.6] ${mutedText}`}>
+            Punya saran fitur, kritik tampilan, request frame band/tema tertentu, atau menemukan bug?
+            Tulis langsung di sini — pesan kamu akan langsung masuk ke panel admin.
+          </p>
+        </div>
+
+        <form onSubmit={handleFeedbackSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[12px] font-semibold mb-1.5">
+                Nama (opsional)
+              </label>
+              <input
+                type="text"
+                value={fbName}
+                onChange={(e) => setFbName(e.target.value)}
+                placeholder="Misal: Diaz atau kosongkan untuk Anonim"
+                className={`w-full px-4 py-3 rounded-[16px] border text-[14px] focus:outline-none focus:border-[#FFB020] ${
+                  isDark
+                    ? 'bg-white/6 border-white/12 text-white placeholder-[#B8B8C4]'
+                    : 'bg-white border-slate-300 text-[#0F0F14] placeholder-slate-400'
+                }`}
+              />
+            </div>
+
+            <div>
+              <label className="block text-[12px] font-semibold mb-1.5">Kategori pesan</label>
+              <div className="flex flex-wrap gap-2">
+                {(['Saran', 'Kritik', 'Request Frame', 'Bug'] as const).map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => {
+                      sound.playClick()
+                      setFbCategory(cat)
+                    }}
+                    className={`px-3.5 py-2.5 rounded-[16px] text-[12px] font-semibold border cursor-pointer transition-colors ${
+                      fbCategory === cat
+                        ? 'bg-[#FFB020] text-[#0F0F14] border-[#FFB020]'
+                        : isDark
+                        ? 'bg-white/6 border-white/12 text-[#B8B8C4] hover:text-white'
+                        : 'bg-white border-slate-300 text-slate-700 hover:text-[#0F0F14]'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[12px] font-semibold mb-1.5">Penilaian web</label>
+            <div className="flex items-center gap-1.5">
+              {[1, 2, 3, 4, 5].map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => {
+                    sound.playClick()
+                    setFbRating(num)
+                  }}
+                  aria-label={`Bintang ${num}`}
+                  className="p-1 cursor-pointer transition-transform hover:scale-110"
+                >
+                  <Star
+                    className={`w-5 h-5 ${
+                      num <= fbRating
+                        ? 'text-[#FFB020] fill-[#FFB020]'
+                        : isDark
+                        ? 'text-white/20'
+                        : 'text-slate-300'
+                    }`}
+                  />
+                </button>
+              ))}
+              <span className={`ml-2 text-[12px] font-semibold ${mutedText}`}>
+                {fbRating} / 5
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[12px] font-semibold mb-1.5">
+              Pesan saran atau kritik *
+            </label>
+            <textarea
+              required
+              rows={3}
+              value={fbMessage}
+              onChange={(e) => setFbMessage(e.target.value)}
+              placeholder="Tulis saran, kritik, atau request frame yang kamu inginkan..."
+              className={`w-full px-4 py-3 rounded-[16px] border text-[14px] leading-[1.6] focus:outline-none focus:border-[#FFB020] resize-none ${
+                isDark
+                  ? 'bg-white/6 border-white/12 text-white placeholder-[#B8B8C4]'
+                  : 'bg-white border-slate-300 text-[#0F0F14] placeholder-slate-400'
+              }`}
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {fbSent ? (
+              <span className="inline-flex items-center gap-2 text-[14px] font-semibold text-emerald-400">
+                <Check className="w-4 h-4" />
+                <span>Terima kasih! Pesan kamu sudah terkirim ke admin.</span>
+              </span>
+            ) : (
+              <span className={`text-[12px] ${mutedText}`}>
+                Pesan dikirim langsung ke dasbor pengelola Urbooth.
+              </span>
+            )}
+
+            <button
+              type="submit"
+              disabled={fbSubmitting || !fbMessage.trim()}
+              className={`btn-secondary px-5 py-3 text-[14px] flex items-center gap-2 cursor-pointer disabled:opacity-50 ${
+                isDark ? '' : '!bg-white !text-[#0F0F14] !border-slate-300'
+              }`}
+            >
+              <Send className="w-4 h-4 text-[#FFB020]" />
+              <span>{fbSubmitting ? 'Mengirim...' : 'Kirim saran & kritik'}</span>
+            </button>
+          </div>
+        </form>
       </section>
     </div>
   )

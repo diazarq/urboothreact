@@ -14,7 +14,6 @@ import {
   Video,
 } from 'lucide-react'
 import type { CameraDevice, FilterId, FrameTemplate, StudioSettings } from '../types'
-import { PHOTO_FILTERS } from '../constants/filters'
 import { sound } from '../utils/sound'
 
 interface CameraStudioProps {
@@ -48,7 +47,7 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [mode, setMode] = useState<'camera' | 'upload'>(initialMode)
-  const [liveFilter, setLiveFilter] = useState<FilterId>('natural')
+  const liveFilter: FilterId = 'natural'
 
   const [devices, setDevices] = useState<CameraDevice[]>([])
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>('')
@@ -61,8 +60,6 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
   const [flashActive, setFlashActive] = useState(false)
   const [capturedShots, setCapturedShots] = useState<string[]>([])
   const [uploadingSlot, setUploadingSlot] = useState<number>(0)
-
-  const activeFilterObj = PHOTO_FILTERS.find((f) => f.id === liveFilter) || PHOTO_FILTERS[0]
 
   const startCamera = useCallback(
     async (deviceId?: string) => {
@@ -474,44 +471,23 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
               autoPlay
               playsInline
               muted
-              style={{ filter: activeFilterObj.cssFilter }}
               className={`w-full h-full object-cover transition-transform ${
                 settings.isMirrored ? 'scale-x-[-1]' : ''
               }`}
             />
 
-            {/* Viewfinder HUD Overlay */}
-            <div className="absolute inset-0 pointer-events-none p-4 sm:p-6 flex flex-col justify-between">
-              <div className="flex items-center justify-between text-xs font-semibold text-white/90 bg-black/45 backdrop-blur-xs px-3.5 py-1.5 rounded-full border border-white/10">
-                <div className="flex items-center space-x-2">
-                  <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                  <span className="font-bold">REC • PHOTO + VIDEO FRAME</span>
-                </div>
-                <div className="hidden sm:block">FILTER: {activeFilterObj.name.toUpperCase()}</div>
-                <div className="font-bold text-[#FFB020]">
-                  {isCapturing
-                    ? `SHOT ${currentSlot + 1} / ${selectedFrame.slots}`
-                    : `${selectedFrame.slots} CUTS READY`}
-                </div>
+            {/* Clean Viewfinder: Hanya angka countdown & flash tanpa teks HUD mengganggu */}
+            {countdown !== null && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span className="text-9xl sm:text-[150px] font-extrabold text-white drop-shadow-[0_6px_28px_rgba(0,0,0,0.75)] select-none">
+                  {countdown}
+                </span>
               </div>
+            )}
 
-              {countdown !== null && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="text-9xl sm:text-[150px] font-extrabold font-black text-white drop-shadow-[0_6px_28px_rgba(0,0,0,0.75)] select-none">
-                    {countdown}
-                  </span>
-                </div>
-              )}
-
-              {flashActive && (
-                <div className="absolute inset-0 bg-white animate-flash pointer-events-none" />
-              )}
-
-              <div className="flex items-center justify-between text-[11px] font-semibold text-white/80 bg-black/45 backdrop-blur-xs px-3.5 py-1 rounded-full border border-white/10">
-                <span>FRAME: {selectedFrame.name}</span>
-                <span>RATIO: {selectedFrame.aspectRatioLabel}</span>
-              </div>
-            </div>
+            {flashActive && (
+              <div className="absolute inset-0 bg-white animate-flash pointer-events-none" />
+            )}
 
             {cameraError && (
               <div className="absolute inset-0 bg-[#14141A] p-6 flex flex-col items-center justify-center text-center z-20">
@@ -547,62 +523,28 @@ export const CameraStudio: React.FC<CameraStudioProps> = ({
             )}
           </div>
 
-          {/* Live Camera Filter Strip (16 Filters!) */}
-          <div className="w-full mt-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className={`text-xs font-bold ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>
-                Pilih Filter Kamera Live ({PHOTO_FILTERS.length} Filter):
-              </span>
-              {devices.length > 1 && (
-                <select
-                  value={selectedDeviceId}
-                  onChange={(e) => {
-                    setSelectedDeviceId(e.target.value)
-                    startCamera(e.target.value)
-                  }}
-                  className={`text-xs font-semibold px-2.5 py-1 rounded-lg border ${
-                    isDark
-                      ? 'bg-[#17171D] border-zinc-800 text-white'
-                      : 'bg-white border-zinc-300 text-zinc-900'
-                  }`}
-                >
-                  {devices.map((d) => (
-                    <option key={d.deviceId} value={d.deviceId}>
-                      {d.label}
-                    </option>
-                  ))}
-                </select>
-              )}
+          {devices.length > 1 && (
+            <div className="w-full mt-3 flex justify-end">
+              <select
+                value={selectedDeviceId}
+                onChange={(e) => {
+                  setSelectedDeviceId(e.target.value)
+                  startCamera(e.target.value)
+                }}
+                className={`text-xs font-semibold px-3 py-1.5 rounded-xl border ${
+                  isDark
+                    ? 'bg-[#17171D] border-zinc-800 text-white'
+                    : 'bg-white border-zinc-300 text-zinc-900'
+                }`}
+              >
+                {devices.map((d) => (
+                  <option key={d.deviceId} value={d.deviceId}>
+                    {d.label}
+                  </option>
+                ))}
+              </select>
             </div>
-
-            <div className="flex items-center gap-2 overflow-x-auto pb-2">
-              {PHOTO_FILTERS.map((f) => {
-                const active = liveFilter === f.id
-                return (
-                  <button
-                    key={f.id}
-                    onClick={() => {
-                      sound.playClick()
-                      setLiveFilter(f.id)
-                    }}
-                    className={`shrink-0 px-3 py-2 rounded-xl border text-xs font-bold flex items-center space-x-2 cursor-pointer transition-all ${
-                      active
-                        ? 'bg-[#FFB020] text-[#0F0F14] border-[#FFB020] shadow-md'
-                        : isDark
-                        ? 'bg-[#17171D] border-zinc-800 text-zinc-300 hover:border-zinc-700'
-                        : 'bg-white border-zinc-200 text-zinc-700 hover:border-zinc-300'
-                    }`}
-                  >
-                    <span
-                      className="w-3 h-3 rounded-full shrink-0"
-                      style={{ backgroundColor: f.previewColor }}
-                    />
-                    <span>{f.name}</span>
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+          )}
 
           {/* Captured Slots Buffer & Big Pink Shutter Button */}
           <div
